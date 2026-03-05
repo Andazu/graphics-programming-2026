@@ -9,3 +9,25 @@ build*
 
 # config files
 *.ini
+
+# Unity project folders
+
+exercises/exercise06/.utmp/
+exercises/exercise06/[Ll]ibrary/
+exercises/exercise06/[Tt]emp/
+exercises/exercise06/[Oo]bj/
+exercises/exercise06/[Bb]uild/
+exercises/exercise06/[Bb]uilds/
+exercises/exercise06/[Ll]ogs/
+exercises/exercise06/[Uu]ser[Ss]ettings/
+exercises/exercise06/*.log
+
+
+#exercises/exercise06/Temp
+#exercises/exercise06/Library
+#exercises/exercise06/Logs
+#exercises/exercise06/UserSettings
+#exercises/exercise06/ProjectSettings
+#exercises/exercise06/Packages/*
+#exercises/exercise06/exercise06.sln
+#exercises/exercise06/.vsconfig
