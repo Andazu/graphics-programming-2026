@@ -9,6 +9,10 @@
 #include <cmath>
 #include <iostream>
 
+#include "ituGL/geometry/ElementBufferObject.h"
+#include "ituGL/geometry/VertexArrayObject.h"
+#include "ituGL/geometry/VertexBufferObject.h"
+
 // Helper structures. Declared here only for this exercise
 struct Vector2
 {

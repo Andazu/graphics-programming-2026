@@ -3,7 +3,9 @@
 #include <ituGL/application/Application.h>
 
 // (todo) 01.1: Include the libraries you need
-
+#include <ituGL/geometry/VertexBufferObject.h>
+#include <ituGL/geometry/VertexArrayObject.h>
+#include <ituGL/geometry/ElementBufferObject.h>
 
 class TerrainApplication : public Application
 {
@@ -26,8 +28,12 @@ private:
     unsigned int m_shaderProgram;
 
     // (todo) 01.1: Declare an VBO, VAO
-
+    VertexArrayObject m_vao;
+    VertexBufferObject m_vbo;
 
     // (todo) 01.5: Declare an EBO
+    ElementBufferObject m_ebo;
 
+    // how many indices we will draw with glDrawElements
+    unsigned int m_indexCount = 0;
 };
