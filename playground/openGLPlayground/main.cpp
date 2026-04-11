@@ -8,7 +8,9 @@
 #include <exception>
 #include <array>
 #include <cmath>
+#include <filesystem>
 #include "shaderClass.h"
+#include <stb_image.h>
 
 /*
     LEARNING OBJECTIVES
@@ -24,6 +26,15 @@ const unsigned int SCR_WIDTH = 512;
 const unsigned int SCR_HEIGHT = 512;
 
 void processInput(GLFWwindow* window);
+
+namespace
+{
+    std::filesystem::path get_texture_path()
+    {
+        const auto sourceDir = std::filesystem::path(__FILE__).parent_path();
+        return (sourceDir / ".." / "Resource Files" / "Textures" / "pop_cat.png").lexically_normal();
+    }
+}
 
 int main()
 {
@@ -56,13 +67,15 @@ int main()
 
         // Vertex data for a triangle in a float array
         float vertices[] = {
-        // Coordinates          // Colors
-        0.5f, -0.5f, 0.0f,      0.9f, 0.2f, 0.6f, 1.0f,   // bottom right
-       -0.5f, -0.5f, 0.0f,      0.1f, 0.7f, 0.9f, 1.0f,   // bottom left
-        0.0f,  1.0f, 0.0f,      0.5f, 0.1f, 0.8f, 1.0f,   // top middle
+        // Coordinates              / Colors            / Texture Coordinates
+            -0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f,   0.0f, 0.0f,
+            -0.5f, 0.5f, 0.0f,      0.0f, 1.0f, 0.0f,   0.0f, 1.0f,
+            0.5f, 0.5f, 0.0f,       0.0f, 0.0f, 1.0f,   1.0f, 1.0f,
+            0.5f, -0.5f, 0.0f,      1.0f, 1.0f, 1.0f,   1.0f, 0.0f
    };
         unsigned int indices[] = {  // note that we start from 0!
-        0, 1, 2, // first triangle
+        0, 2, 1, // first triangle
+        0, 3, 2, // second triangle
     };
 
         // Vertex Array Object (VAO) - Part 2
@@ -85,12 +98,17 @@ int main()
         // The position attribute is made of 3 floats: x, y, z
         VertexAttribute position(Data::Type::Float, 3);
         // Use shader location 0, read 3 floats (x,y,z) start at byte offset 0, jump 7 floats to get to the next vertex
-        vao.SetAttribute(0, position, 0, 7 * sizeof(float));
+        vao.SetAttribute(0, position, 0, 8 * sizeof(float));
 
         // The color attribute is made of 4 floats: RGB and Alpha
         VertexAttribute color(Data::Type::Float, 4);
         // Use shader location 1, read 4 floats (r,g,b,a) start after the first 3 floats, jump 7 floats to get to the next vertex
-        vao.SetAttribute(1, color, 3 * sizeof(float), 7 * sizeof(float));
+        vao.SetAttribute(1, color, 3 * sizeof(float), 8 * sizeof(float));
+
+        // The texture attribute is made of two floats
+        VertexAttribute texCoord(Data::Type::Float, 2);
+        // Use shader location 2, read 2 floats (s,t) start after the first 7 floats, jump 2 floats to get to the next vertex
+        vao.SetAttribute(2, texCoord, 6 * sizeof(float), 8 * sizeof(float));
 
         // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
         VertexBufferObject::Unbind();
@@ -104,6 +122,37 @@ int main()
 
         // Uniform reference value
         GLuint uniID = glGetUniformLocation(shaderProgram.ID, "scale");
+
+        // Texture
+        int widthImg = 0, heightImg = 0, numColCh = 0;
+        stbi_set_flip_vertically_on_load(true);
+        const auto texturePath = get_texture_path();
+        unsigned char* bytes = stbi_load(texturePath.string().c_str(), &widthImg, &heightImg, &numColCh, 4);
+        if (!bytes)
+        {
+            throw std::runtime_error(std::string("Failed to load texture: ") + stbi_failure_reason());
+        }
+
+        GLuint texture;
+        glGenTextures(1, &texture);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, widthImg, heightImg, 0, GL_RGBA, GL_UNSIGNED_BYTE, bytes);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        stbi_image_free(bytes);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        GLuint tex0Uni = glGetUniformLocation(shaderProgram.ID, "tex0");
+        shaderProgram.Activate();
+        glUniform1i(tex0Uni, 0);
 
         // uncomment this call to draw in wireframe polygons.
         //glPolygonMode(NULL, NULL);
@@ -124,10 +173,11 @@ int main()
             shaderProgram.Activate();
             // Give value to uniform
             glUniform1f(uniID, 0.5f);
+            glBindTexture(GL_TEXTURE_2D, texture);
 
             vao.Bind(); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
             //glDrawArrays(GL_TRIANGLES, 0, 3);
-            glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0);
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
             // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
             // -------------------------------------------------------------------------------

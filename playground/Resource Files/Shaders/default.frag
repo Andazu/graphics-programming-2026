@@ -4,10 +4,13 @@
 out vec4 FragColor;
 in vec4 color;
 in vec3 position;
+in vec2 texCoord;
+
+uniform sampler2D tex0;
 
 void main()
 {
    // Sets every fragment to the same color
    // "Color the whole shape orange"
-   FragColor = vec4(position, 1.0);
+   FragColor = texture(tex0, texCoord);
 }

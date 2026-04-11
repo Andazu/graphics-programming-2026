@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 #include <glad/glad.h>
 #include <span>
 

@@ -1,6 +1,7 @@
 #include <ituGL/shader/ShaderProgram.h>
 
 #include <ituGL/shader/Shader.h>
+#include <ituGL/texture/TextureObject.h>
 #include <cassert>
 
 #ifndef NDEBUG
@@ -21,6 +22,16 @@ ShaderProgram::~ShaderProgram()
         glDeleteProgram(handle);
         handle = NullHandle;
     }
+}
+
+ShaderProgram::ShaderProgram(ShaderProgram&& shaderProgram) noexcept : Object(std::move(shaderProgram))
+{
+}
+
+ShaderProgram& ShaderProgram::operator = (ShaderProgram&& shaderProgram) noexcept
+{
+    Object::operator=(std::move(shaderProgram));
+    return *this;
 }
 
 // Bind should not be called for ShaderProgram
@@ -135,6 +146,19 @@ ShaderProgram::Location ShaderProgram::GetUniformLocation(const char* name) cons
     return glGetUniformLocation(GetHandle(), name);
 }
 
+// Get how many uniforms exist in this shader program
+unsigned int ShaderProgram::GetUniformCount() const
+{
+    GLint uniformCount;
+    glGetProgramiv(GetHandle(), GL_ACTIVE_UNIFORMS, &uniformCount);
+    return uniformCount;
+}
+
+// Get information about a specific uniform
+void ShaderProgram::GetUniformInfo(unsigned int index, int& size, GLenum& glType, std::span<char> uniformName) const
+{
+    glGetActiveUniform(GetHandle(), index, uniformName.size(), nullptr, &size, &glType, uniformName.data());
+}
 
 // All the different combinations of Get/SetUniform
 template<>
@@ -170,7 +194,7 @@ void ShaderProgram::GetUniform<GLdouble>(Location location, std::span<GLdouble> 
 }
 
 template<>
-void ShaderProgram::SetUniforms<GLint, 1>(Location location, const GLint* values, GLsizei count)
+void ShaderProgram::SetUniforms<GLint, 1>(Location location, const GLint* values, GLsizei count) const
 {
     assert(IsValid());
     assert(IsUsed());
@@ -178,7 +202,7 @@ void ShaderProgram::SetUniforms<GLint, 1>(Location location, const GLint* values
 }
 
 template<>
-void ShaderProgram::SetUniforms<GLint, 2>(Location location, const GLint* values, GLsizei count)
+void ShaderProgram::SetUniforms<GLint, 2>(Location location, const GLint* values, GLsizei count) const
 {
     assert(IsValid());
     assert(IsUsed());
@@ -186,7 +210,7 @@ void ShaderProgram::SetUniforms<GLint, 2>(Location location, const GLint* values
 }
 
 template<>
-void ShaderProgram::SetUniforms<GLint, 3>(Location location, const GLint* values, GLsizei count)
+void ShaderProgram::SetUniforms<GLint, 3>(Location location, const GLint* values, GLsizei count) const
 {
     assert(IsValid());
     assert(IsUsed());
@@ -194,7 +218,7 @@ void ShaderProgram::SetUniforms<GLint, 3>(Location location, const GLint* values
 }
 
 template<>
-void ShaderProgram::SetUniforms<GLint, 4>(Location location, const GLint* values, GLsizei count)
+void ShaderProgram::SetUniforms<GLint, 4>(Location location, const GLint* values, GLsizei count) const
 {
     assert(IsValid());
     assert(IsUsed());
@@ -202,7 +226,7 @@ void ShaderProgram::SetUniforms<GLint, 4>(Location location, const GLint* values
 }
 
 template<>
-void ShaderProgram::SetUniforms<GLuint, 1>(Location location, const GLuint* values, GLsizei count)
+void ShaderProgram::SetUniforms<GLuint, 1>(Location location, const GLuint* values, GLsizei count) const
 {
     assert(IsValid());
     assert(IsUsed());
@@ -210,7 +234,7 @@ void ShaderProgram::SetUniforms<GLuint, 1>(Location location, const GLuint* valu
 }
 
 template<>
-void ShaderProgram::SetUniforms<GLuint, 2>(Location location, const GLuint* values, GLsizei count)
+void ShaderProgram::SetUniforms<GLuint, 2>(Location location, const GLuint* values, GLsizei count) const
 {
     assert(IsValid());
     assert(IsUsed());
@@ -218,7 +242,7 @@ void ShaderProgram::SetUniforms<GLuint, 2>(Location location, const GLuint* valu
 }
 
 template<>
-void ShaderProgram::SetUniforms<GLuint, 3>(Location location, const GLuint* values, GLsizei count)
+void ShaderProgram::SetUniforms<GLuint, 3>(Location location, const GLuint* values, GLsizei count) const
 {
     assert(IsValid());
     assert(IsUsed());
@@ -226,7 +250,7 @@ void ShaderProgram::SetUniforms<GLuint, 3>(Location location, const GLuint* valu
 }
 
 template<>
-void ShaderProgram::SetUniforms<GLuint, 4>(Location location, const GLuint* values, GLsizei count)
+void ShaderProgram::SetUniforms<GLuint, 4>(Location location, const GLuint* values, GLsizei count) const
 {
     assert(IsValid());
     assert(IsUsed());
@@ -234,7 +258,7 @@ void ShaderProgram::SetUniforms<GLuint, 4>(Location location, const GLuint* valu
 }
 
 template<>
-void ShaderProgram::SetUniforms<GLfloat, 1>(Location location, const GLfloat* values, GLsizei count)
+void ShaderProgram::SetUniforms<GLfloat, 1>(Location location, const GLfloat* values, GLsizei count) const
 {
     assert(IsValid());
     assert(IsUsed());
@@ -242,7 +266,7 @@ void ShaderProgram::SetUniforms<GLfloat, 1>(Location location, const GLfloat* va
 }
 
 template<>
-void ShaderProgram::SetUniforms<GLfloat, 2>(Location location, const GLfloat* values, GLsizei count)
+void ShaderProgram::SetUniforms<GLfloat, 2>(Location location, const GLfloat* values, GLsizei count) const
 {
     assert(IsValid());
     assert(IsUsed());
@@ -250,7 +274,7 @@ void ShaderProgram::SetUniforms<GLfloat, 2>(Location location, const GLfloat* va
 }
 
 template<>
-void ShaderProgram::SetUniforms<GLfloat, 3>(Location location, const GLfloat* values, GLsizei count)
+void ShaderProgram::SetUniforms<GLfloat, 3>(Location location, const GLfloat* values, GLsizei count) const
 {
     assert(IsValid());
     assert(IsUsed());
@@ -258,7 +282,7 @@ void ShaderProgram::SetUniforms<GLfloat, 3>(Location location, const GLfloat* va
 }
 
 template<>
-void ShaderProgram::SetUniforms<GLfloat, 4>(Location location, const GLfloat* values, GLsizei count)
+void ShaderProgram::SetUniforms<GLfloat, 4>(Location location, const GLfloat* values, GLsizei count) const
 {
     assert(IsValid());
     assert(IsUsed());
@@ -266,7 +290,7 @@ void ShaderProgram::SetUniforms<GLfloat, 4>(Location location, const GLfloat* va
 }
 
 template<>
-void ShaderProgram::SetUniforms<GLdouble, 1>(Location location, const GLdouble* values, GLsizei count)
+void ShaderProgram::SetUniforms<GLdouble, 1>(Location location, const GLdouble* values, GLsizei count) const
 {
     assert(IsValid());
     assert(IsUsed());
@@ -274,7 +298,7 @@ void ShaderProgram::SetUniforms<GLdouble, 1>(Location location, const GLdouble* 
 }
 
 template<>
-void ShaderProgram::SetUniforms<GLdouble, 2>(Location location, const GLdouble* values, GLsizei count)
+void ShaderProgram::SetUniforms<GLdouble, 2>(Location location, const GLdouble* values, GLsizei count) const
 {
     assert(IsValid());
     assert(IsUsed());
@@ -282,7 +306,7 @@ void ShaderProgram::SetUniforms<GLdouble, 2>(Location location, const GLdouble* 
 }
 
 template<>
-void ShaderProgram::SetUniforms<GLdouble, 3>(Location location, const GLdouble* values, GLsizei count)
+void ShaderProgram::SetUniforms<GLdouble, 3>(Location location, const GLdouble* values, GLsizei count) const
 {
     assert(IsValid());
     assert(IsUsed());
@@ -290,7 +314,7 @@ void ShaderProgram::SetUniforms<GLdouble, 3>(Location location, const GLdouble* 
 }
 
 template<>
-void ShaderProgram::SetUniforms<GLdouble, 4>(Location location, const GLdouble* values, GLsizei count)
+void ShaderProgram::SetUniforms<GLdouble, 4>(Location location, const GLdouble* values, GLsizei count) const
 {
     assert(IsValid());
     assert(IsUsed());
@@ -298,7 +322,7 @@ void ShaderProgram::SetUniforms<GLdouble, 4>(Location location, const GLdouble* 
 }
 
 template<>
-void ShaderProgram::SetUniforms<GLfloat, 2, 2>(Location location, const GLfloat* values, GLsizei count)
+void ShaderProgram::SetUniforms<GLfloat, 2, 2>(Location location, const GLfloat* values, GLsizei count) const
 {
     assert(IsValid());
     assert(IsUsed());
@@ -306,7 +330,7 @@ void ShaderProgram::SetUniforms<GLfloat, 2, 2>(Location location, const GLfloat*
 }
 
 template<>
-void ShaderProgram::SetUniforms<GLfloat, 2, 3>(Location location, const GLfloat* values, GLsizei count)
+void ShaderProgram::SetUniforms<GLfloat, 2, 3>(Location location, const GLfloat* values, GLsizei count) const
 {
     assert(IsValid());
     assert(IsUsed());
@@ -314,7 +338,7 @@ void ShaderProgram::SetUniforms<GLfloat, 2, 3>(Location location, const GLfloat*
 }
 
 template<>
-void ShaderProgram::SetUniforms<GLfloat, 2, 4>(Location location, const GLfloat* values, GLsizei count)
+void ShaderProgram::SetUniforms<GLfloat, 2, 4>(Location location, const GLfloat* values, GLsizei count) const
 {
     assert(IsValid());
     assert(IsUsed());
@@ -322,7 +346,7 @@ void ShaderProgram::SetUniforms<GLfloat, 2, 4>(Location location, const GLfloat*
 }
 
 template<>
-void ShaderProgram::SetUniforms<GLfloat, 3, 2>(Location location, const GLfloat* values, GLsizei count)
+void ShaderProgram::SetUniforms<GLfloat, 3, 2>(Location location, const GLfloat* values, GLsizei count) const
 {
     assert(IsValid());
     assert(IsUsed());
@@ -330,7 +354,7 @@ void ShaderProgram::SetUniforms<GLfloat, 3, 2>(Location location, const GLfloat*
 }
 
 template<>
-void ShaderProgram::SetUniforms<GLfloat, 3, 3>(Location location, const GLfloat* values, GLsizei count)
+void ShaderProgram::SetUniforms<GLfloat, 3, 3>(Location location, const GLfloat* values, GLsizei count) const
 {
     assert(IsValid());
     assert(IsUsed());
@@ -338,7 +362,7 @@ void ShaderProgram::SetUniforms<GLfloat, 3, 3>(Location location, const GLfloat*
 }
 
 template<>
-void ShaderProgram::SetUniforms<GLfloat, 3, 4>(Location location, const GLfloat* values, GLsizei count)
+void ShaderProgram::SetUniforms<GLfloat, 3, 4>(Location location, const GLfloat* values, GLsizei count) const
 {
     assert(IsValid());
     assert(IsUsed());
@@ -346,7 +370,7 @@ void ShaderProgram::SetUniforms<GLfloat, 3, 4>(Location location, const GLfloat*
 }
 
 template<>
-void ShaderProgram::SetUniforms<GLfloat, 4, 2>(Location location, const GLfloat* values, GLsizei count)
+void ShaderProgram::SetUniforms<GLfloat, 4, 2>(Location location, const GLfloat* values, GLsizei count) const
 {
     assert(IsValid());
     assert(IsUsed());
@@ -354,7 +378,7 @@ void ShaderProgram::SetUniforms<GLfloat, 4, 2>(Location location, const GLfloat*
 }
 
 template<>
-void ShaderProgram::SetUniforms<GLfloat, 4, 3>(Location location, const GLfloat* values, GLsizei count)
+void ShaderProgram::SetUniforms<GLfloat, 4, 3>(Location location, const GLfloat* values, GLsizei count) const
 {
     assert(IsValid());
     assert(IsUsed());
@@ -362,9 +386,18 @@ void ShaderProgram::SetUniforms<GLfloat, 4, 3>(Location location, const GLfloat*
 }
 
 template<>
-void ShaderProgram::SetUniforms<GLfloat, 4, 4>(Location location, const GLfloat* values, GLsizei count)
+void ShaderProgram::SetUniforms<GLfloat, 4, 4>(Location location, const GLfloat* values, GLsizei count) const
 {
     assert(IsValid());
     assert(IsUsed());
     glUniformMatrix4fv(location, count, false, values);
+}
+
+void ShaderProgram::SetTexture(Location location, GLint textureUnit, const TextureObject& texture) const
+{
+    assert(IsValid());
+    assert(IsUsed());
+    TextureObject::SetActiveTexture(textureUnit);
+    texture.Bind();
+    SetUniform(location, textureUnit);
 }
