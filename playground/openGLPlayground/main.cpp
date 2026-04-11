@@ -56,14 +56,15 @@ int main()
 
         // Vertex data for a triangle in a float array
         float vertices[] = {
-        0.5f,  0.5f, 0.0f,  // top right
-        0.5f, -0.5f, 0.0f,  // bottom right
-       -0.5f, -0.5f, 0.0f,  // bottom left
-       -0.5f,  0.5f, 0.0f,   // top left
-        0.0f,  1.0f, 0.0f,   // top middle
-        1.0f, 0.0f, 0.0f, // right middle
-        0.0f,  -1.0f, 0.0f, // bottom middle
-        -1.0f, 0.0f, 0.0f, // left middle
+        // Coordinates          // Colors
+        0.5f,  0.5f, 0.0f,      0.0f, 0.8f, 0.3f, 0.02f,  // top right
+        0.5f, -0.5f, 0.0f,      0.9f, 0.2f, 0.6f, 1.0f,   // bottom right
+       -0.5f, -0.5f, 0.0f,      0.1f, 0.7f, 0.9f, 1.0f,   // bottom left
+       -0.5f,  0.5f, 0.0f,      0.8f, 0.4f, 0.1f, 1.0f,   // top left
+        0.0f,  1.0f, 0.0f,      0.5f, 0.1f, 0.8f, 1.0f,   // top middle
+        1.0f,  0.0f, 0.0f,      0.2f, 1.0f, 0.4f, 1.0f,   // right middle
+        0.0f, -1.0f, 0.0f,      1.0f, 0.9f, 0.2f, 1.0f,   // bottom middle
+       -1.0f,  0.0f, 0.0f,      0.3f, 0.5f, 1.0f, 1.0f,   // left middle
    };
         unsigned int indices[] = {  // note that we start from 0!
         0, 1, 3, // first triangle
@@ -91,8 +92,15 @@ int main()
         ebo.Bind();
         ebo.AllocateData<unsigned int>(std::span(indices));
 
+        // The position attribute is made of 3 floats: x, y, z
         VertexAttribute position(Data::Type::Float, 3);
-        vao.SetAttribute(0, position, 0);
+        // Use shader location 0, read 3 floats (x,y,z) start at byte offset 0, jump 7 floats to get to the next vertex
+        vao.SetAttribute(0, position, 0, 7 * sizeof(float));
+
+        // The color attribute is made of 4 floats: RGB and Alpha
+        VertexAttribute color(Data::Type::Float, 4);
+        // Use shader location 1, read 4 floats (r,g,b,a) start after the first 3 floats, jump 7 floats to get to the next vertex
+        vao.SetAttribute(1, color, 3 * sizeof(float), 7 * sizeof(float));
 
         // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
         VertexBufferObject::Unbind();
@@ -103,6 +111,9 @@ int main()
 
         // Now we can unbind the EBO as well
         ElementBufferObject::Unbind();
+
+        // Uniform reference value
+        GLuint uniID = glGetUniformLocation(shaderProgram.ID, "scale");
 
         // uncomment this call to draw in wireframe polygons.
         //glPolygonMode(NULL, NULL);
@@ -121,6 +132,9 @@ int main()
 
             // drawing an object
             shaderProgram.Activate();
+            // Give value to uniform
+            glUniform1f(uniID, 0.5f);
+
             vao.Bind(); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
             //glDrawArrays(GL_TRIANGLES, 0, 3);
             glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0);

@@ -1,6 +1,12 @@
 #version 330 core
+// We declare the shaders output color
+// vec4 means 4 floats: RGB and Alpha
 out vec4 FragColor;
+in vec4 color;
+
 void main()
 {
-   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+   // Sets every fragment to the same color
+   // "Color the whole shape orange"
+   FragColor = color;
 }
