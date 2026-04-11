@@ -97,17 +97,17 @@ int main()
 
         // The position attribute is made of 3 floats: x, y, z
         VertexAttribute position(Data::Type::Float, 3);
-        // Use shader location 0, read 3 floats (x,y,z) start at byte offset 0, jump 7 floats to get to the next vertex
+        // Use shader location 0, read 3 floats (x,y,z) start at byte offset 0, jump 8 floats to get to the next vertex
         vao.SetAttribute(0, position, 0, 8 * sizeof(float));
 
         // The color attribute is made of 4 floats: RGB and Alpha
         VertexAttribute color(Data::Type::Float, 4);
-        // Use shader location 1, read 4 floats (r,g,b,a) start after the first 3 floats, jump 7 floats to get to the next vertex
+        // Use shader location 1, read 4 floats (r,g,b,a) start after the first 3 floats, jump 8 floats to get to the next vertex
         vao.SetAttribute(1, color, 3 * sizeof(float), 8 * sizeof(float));
 
         // The texture attribute is made of two floats
         VertexAttribute texCoord(Data::Type::Float, 2);
-        // Use shader location 2, read 2 floats (s,t) start after the first 7 floats, jump 2 floats to get to the next vertex
+        // Use shader location 2, read 2 floats (s,t) start after the first 6 floats, jump 8 floats to get to the next vertex
         vao.SetAttribute(2, texCoord, 6 * sizeof(float), 8 * sizeof(float));
 
         // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
@@ -126,6 +126,7 @@ int main()
         // Texture
         int widthImg = 0, heightImg = 0, numColCh = 0;
         stbi_set_flip_vertically_on_load(true);
+        // Loading texture
         const auto texturePath = get_texture_path();
         unsigned char* bytes = stbi_load(texturePath.string().c_str(), &widthImg, &heightImg, &numColCh, 4);
         if (!bytes)
@@ -133,23 +134,32 @@ int main()
             throw std::runtime_error(std::string("Failed to load texture: ") + stbi_failure_reason());
         }
 
+        // Reference variable
         GLuint texture;
+        // Generate texture object, one texture and a reference variable
         glGenTextures(1, &texture);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
 
+        // Apply settings
+        // - Image processing GL_LINEAR
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+        // - Texture repeating
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
+        // Generate image
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, widthImg, heightImg, 0, GL_RGBA, GL_UNSIGNED_BYTE, bytes);
+        // Generate mipmaps, which are just the same image but at smaller sizes for responsiveness
         glGenerateMipmap(GL_TEXTURE_2D);
 
+        // Texture cleanup
         stbi_image_free(bytes);
         glBindTexture(GL_TEXTURE_2D, 0);
 
+        // Uniform for texture coordinates
         GLuint tex0Uni = glGetUniformLocation(shaderProgram.ID, "tex0");
         shaderProgram.Activate();
         glUniform1i(tex0Uni, 0);
