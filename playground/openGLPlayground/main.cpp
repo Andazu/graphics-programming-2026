@@ -57,22 +57,12 @@ int main()
         // Vertex data for a triangle in a float array
         float vertices[] = {
         // Coordinates          // Colors
-        0.5f,  0.5f, 0.0f,      0.0f, 0.8f, 0.3f, 0.02f,  // top right
         0.5f, -0.5f, 0.0f,      0.9f, 0.2f, 0.6f, 1.0f,   // bottom right
        -0.5f, -0.5f, 0.0f,      0.1f, 0.7f, 0.9f, 1.0f,   // bottom left
-       -0.5f,  0.5f, 0.0f,      0.8f, 0.4f, 0.1f, 1.0f,   // top left
         0.0f,  1.0f, 0.0f,      0.5f, 0.1f, 0.8f, 1.0f,   // top middle
-        1.0f,  0.0f, 0.0f,      0.2f, 1.0f, 0.4f, 1.0f,   // right middle
-        0.0f, -1.0f, 0.0f,      1.0f, 0.9f, 0.2f, 1.0f,   // bottom middle
-       -1.0f,  0.0f, 0.0f,      0.3f, 0.5f, 1.0f, 1.0f,   // left middle
    };
         unsigned int indices[] = {  // note that we start from 0!
-        0, 1, 3, // first triangle
-        1, 2, 3, // second triangle
-        0, 3, 4, // third triangle
-        0, 1, 5, // fourth triangle
-        1, 6, 2, // fifth triangle
-        2, 7, 3, // sixth triangle
+        0, 1, 2, // first triangle
     };
 
         // Vertex Array Object (VAO) - Part 2
