@@ -11,15 +11,9 @@
 #include <filesystem>
 #include "shaderClass.h"
 #include <stb_image.h>
-
-/*
-    LEARNING OBJECTIVES
-    Setup an OpenGL application from scratch. - Done
-    Create a GLFW window and an OpenGL context. - Done
-    Setup the buffers necessary for rendering with OpenGL (Vertex Buffer Object (VBO), Vertex Array Object (VAO) and Element Buffer Object (EBO)). - Done
-    Draw simple shapes. - Done
-    Develop a basic understanding of the Normalized Device Coordinates (NDC) and of the window coordinates. - Done!
-*/
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 // settings
 const unsigned int SCR_WIDTH = 512;
@@ -123,6 +117,24 @@ int main()
         // Uniform reference value
         GLuint uniID = glGetUniformLocation(shaderProgram.ID, "scale");
 
+        // Transformations - translating a vector of (1,0,0) by (1,1,0)
+        // Creating vec
+        glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);
+        glm::mat4 trans = glm::mat4(1.0f);
+        // Creating transformation matrix
+        trans = glm::translate(trans, glm::vec3(1.0f, 1.0f, 0.0f));
+        // Multiply vec by transformation matrix ( (1+1,0+1,0+0) = (2,1,0) ) = Works!
+        vec = trans * vec;
+        std::cout << vec.x << vec.y << vec.z << std::endl;
+
+        // Rotation and Scale
+        trans = glm::mat4(1.0f);
+        trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
+        trans = glm::scale(trans, glm::vec3(0.5f, 0.5f, 0.5f));
+        // Pass transformation matrix to shader
+        // Get id for uniform, we pass it later after shaderProgram is activated :)
+        const GLuint transformLoc = glGetUniformLocation(shaderProgram.ID, "transform");
+
         // Texture
         int widthImg = 0, heightImg = 0, numColCh = 0;
         stbi_set_flip_vertically_on_load(true);
@@ -163,6 +175,7 @@ int main()
         GLuint tex0Uni = glGetUniformLocation(shaderProgram.ID, "tex0");
         shaderProgram.Activate();
         glUniform1i(tex0Uni, 0);
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
 
         // uncomment this call to draw in wireframe polygons.
         //glPolygonMode(NULL, NULL);
@@ -179,10 +192,16 @@ int main()
             // ------
             deviceGL.Clear(Color(0.2f, 0.3f, 0.3f, 1.0f));
 
+            // Update transformation matrix
+            glm::mat4 trans = glm::mat4(1.0f);
+            trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
+            trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+
             // drawing an object
             shaderProgram.Activate();
             // Give value to uniform
             glUniform1f(uniID, 0.5f);
+            glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
             glBindTexture(GL_TEXTURE_2D, texture);
 
             vao.Bind(); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized

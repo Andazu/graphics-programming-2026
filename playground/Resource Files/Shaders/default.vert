@@ -14,6 +14,7 @@ out vec3 position;
 out vec2 texCoord;
 
 uniform float scale;
+uniform mat4 transform;
 
 // every shader needs a main function
 // runs once per vertex
@@ -22,7 +23,7 @@ void main()
    // Tells OpenGL where this vertex should appear on screen
    // gl_Position needs to be vec4, so the 3D position is turned into 4 values with w = 1
    // We dont transform anything here, we just pass the position straight through
-   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+   gl_Position = transform * vec4(aPos.x, aPos.y, aPos.z, 1.0);
    color = aColor;
    position = aPos;
    texCoord = aTex;
