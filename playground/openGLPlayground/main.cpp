@@ -59,18 +59,54 @@ int main()
         // ------------------------------------
         Shader shaderProgram("default.vert", "default.frag");
 
-        // Vertex data for a triangle in a float array
+        // Vertex data for a cube. Each face has its own vertices so every face can use
+        // the full 0..1 texture coordinate range.
         float vertices[] = {
-        // Coordinates              / Colors            / Texture Coordinates
-            -0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f,   0.0f, 0.0f,
-            -0.5f, 0.5f, 0.0f,      0.0f, 1.0f, 0.0f,   0.0f, 1.0f,
-            0.5f, 0.5f, 0.0f,       0.0f, 0.0f, 1.0f,   1.0f, 1.0f,
-            0.5f, -0.5f, 0.0f,      1.0f, 1.0f, 1.0f,   1.0f, 0.0f
-   };
+            // Coordinates          // Colors           // Texture coordinates
+            // Front
+            -0.5f, -0.5f,  0.5f,    1.0f, 0.0f, 0.0f,   0.0f, 0.0f,
+             0.5f, -0.5f,  0.5f,    0.0f, 1.0f, 0.0f,   1.0f, 0.0f,
+             0.5f,  0.5f,  0.5f,    0.0f, 0.0f, 1.0f,   1.0f, 1.0f,
+            -0.5f,  0.5f,  0.5f,    1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
+
+            // Back
+             0.5f, -0.5f, -0.5f,    1.0f, 0.0f, 0.0f,   0.0f, 0.0f,
+            -0.5f, -0.5f, -0.5f,    0.0f, 1.0f, 0.0f,   1.0f, 0.0f,
+            -0.5f,  0.5f, -0.5f,    0.0f, 0.0f, 1.0f,   1.0f, 1.0f,
+             0.5f,  0.5f, -0.5f,    1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
+
+            // Left
+            -0.5f, -0.5f, -0.5f,    1.0f, 0.0f, 0.0f,   0.0f, 0.0f,
+            -0.5f, -0.5f,  0.5f,    0.0f, 1.0f, 0.0f,   1.0f, 0.0f,
+            -0.5f,  0.5f,  0.5f,    0.0f, 0.0f, 1.0f,   1.0f, 1.0f,
+            -0.5f,  0.5f, -0.5f,    1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
+
+            // Right
+             0.5f, -0.5f,  0.5f,    1.0f, 0.0f, 0.0f,   0.0f, 0.0f,
+             0.5f, -0.5f, -0.5f,    0.0f, 1.0f, 0.0f,   1.0f, 0.0f,
+             0.5f,  0.5f, -0.5f,    0.0f, 0.0f, 1.0f,   1.0f, 1.0f,
+             0.5f,  0.5f,  0.5f,    1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
+
+            // Top
+            -0.5f,  0.5f,  0.5f,    1.0f, 0.0f, 0.0f,   0.0f, 0.0f,
+             0.5f,  0.5f,  0.5f,    0.0f, 1.0f, 0.0f,   1.0f, 0.0f,
+             0.5f,  0.5f, -0.5f,    0.0f, 0.0f, 1.0f,   1.0f, 1.0f,
+            -0.5f,  0.5f, -0.5f,    1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
+
+            // Bottom
+            -0.5f, -0.5f, -0.5f,    1.0f, 0.0f, 0.0f,   0.0f, 0.0f,
+             0.5f, -0.5f, -0.5f,    0.0f, 1.0f, 0.0f,   1.0f, 0.0f,
+             0.5f, -0.5f,  0.5f,    0.0f, 0.0f, 1.0f,   1.0f, 1.0f,
+            -0.5f, -0.5f,  0.5f,    1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
+        };
         unsigned int indices[] = {  // note that we start from 0!
-        0, 2, 1, // first triangle
-        0, 3, 2, // second triangle
-    };
+             0,  1,  2,  2,  3,  0, // Front
+             4,  5,  6,  6,  7,  4, // Back
+             8,  9, 10, 10, 11,  8, // Left
+            12, 13, 14, 14, 15, 12, // Right
+            16, 17, 18, 18, 19, 16, // Top
+            20, 21, 22, 22, 23, 20, // Bottom
+        };
 
         // Vertex Array Object (VAO) - Part 2
         // Stores pointers to VAOs and tells opengl where to find them
@@ -94,9 +130,9 @@ int main()
         // Use shader location 0, read 3 floats (x,y,z) start at byte offset 0, jump 8 floats to get to the next vertex
         vao.SetAttribute(0, position, 0, 8 * sizeof(float));
 
-        // The color attribute is made of 4 floats: RGB and Alpha
-        VertexAttribute color(Data::Type::Float, 4);
-        // Use shader location 1, read 4 floats (r,g,b,a) start after the first 3 floats, jump 8 floats to get to the next vertex
+        // The color attribute is made of 3 floats: RGB
+        VertexAttribute color(Data::Type::Float, 3);
+        // Use shader location 1, read 3 floats (r,g,b) start after the first 3 floats, jump 8 floats to get to the next vertex
         vao.SetAttribute(1, color, 3 * sizeof(float), 8 * sizeof(float));
 
         // The texture attribute is made of two floats
@@ -181,6 +217,9 @@ int main()
         //glPolygonMode(NULL, NULL);
         bool PolyGonMode = false;
 
+        // Depth Buffer
+        deviceGL.EnableFeature(GL_DEPTH_TEST);
+
         // Render loop
         while (!window.ShouldClose())
         {
@@ -190,23 +229,47 @@ int main()
 
             // render
             // ------
-            deviceGL.Clear(Color(0.2f, 0.3f, 0.3f, 1.0f));
+            deviceGL.Clear(true, Color(0.2f, 0.3f, 0.3f, 1.0f), true, 1.0f);
 
             // Update transformation matrix
             glm::mat4 trans = glm::mat4(1.0f);
             trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
             trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
 
-            // drawing an object
+            // Drawing an object - Telling OpenGL which shader program we want to use
             shaderProgram.Activate();
-            // Give value to uniform
+
+            // GOING 3D
+            // Initialize matrices
+            glm::mat4 model = glm::mat4(1.0f);
+            glm::mat4 view = glm::mat4(1.0f);
+            glm::mat4 proj = glm::mat4(1.0f);
+            // Rotate our cube
+            model = glm::rotate(model, glm::radians((float)glfwGetTime() * 50), glm::vec3(1.0f, 1.0f, 0.0f));
+            // Move the world away from our camera
+            view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+            // Set our view in radians, aspect ration to our screen dimension, and the culling distance as the last two parameters
+            proj = glm::perspective(glm::radians(45.0f), (float)(SCR_WIDTH / SCR_HEIGHT), 0.1f, 100.0f );
+
+            // Get location of Uniform
+            int modelLoc = glGetUniformLocation(shaderProgram.ID, "model");
+            // Assign value to uniform
+            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+            // Repeat for view and proj
+            int viewLoc = glGetUniformLocation(shaderProgram.ID, "view");
+            glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+            int projLoc = glGetUniformLocation(shaderProgram.ID, "proj");
+            glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
+
+
+            // Assigning value to uniform
             glUniform1f(uniID, 0.5f);
             glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
             glBindTexture(GL_TEXTURE_2D, texture);
 
             vao.Bind(); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
             //glDrawArrays(GL_TRIANGLES, 0, 3);
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+            glDrawElements(GL_TRIANGLES, sizeof(indices)/sizeof(int), GL_UNSIGNED_INT, 0);
 
             // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
             // -------------------------------------------------------------------------------
