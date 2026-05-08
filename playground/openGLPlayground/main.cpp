@@ -10,25 +10,17 @@
 #include <cmath>
 #include <filesystem>
 #include "shaderClass.h"
-#include <stb_image.h>
+// #include <stb_image.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <vector>
 
 // settings
 const unsigned int SCR_WIDTH = 512;
 const unsigned int SCR_HEIGHT = 512;
 
 void processInput(GLFWwindow* window);
-
-namespace
-{
-    std::filesystem::path get_texture_path()
-    {
-        const auto sourceDir = std::filesystem::path(__FILE__).parent_path();
-        return (sourceDir / ".." / "Resource Files" / "Textures" / "pop_cat.png").lexically_normal();
-    }
-}
 
 int main()
 {
@@ -59,54 +51,45 @@ int main()
         // ------------------------------------
         Shader shaderProgram("default.vert", "default.frag");
 
-        // Vertex data for a cube. Each face has its own vertices so every face can use
-        // the full 0..1 texture coordinate range.
-        float vertices[] = {
-            // Coordinates          // Colors           // Texture coordinates
-            // Front
-            -0.5f, -0.5f,  0.5f,    1.0f, 0.0f, 0.0f,   0.0f, 0.0f,
-             0.5f, -0.5f,  0.5f,    0.0f, 1.0f, 0.0f,   1.0f, 0.0f,
-             0.5f,  0.5f,  0.5f,    0.0f, 0.0f, 1.0f,   1.0f, 1.0f,
-            -0.5f,  0.5f,  0.5f,    1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
+        // Vertex data for a icicles with generated arrays
+        std::vector<float> vertices;
+        std::vector<unsigned int> indices;
 
-            // Back
-             0.5f, -0.5f, -0.5f,    1.0f, 0.0f, 0.0f,   0.0f, 0.0f,
-            -0.5f, -0.5f, -0.5f,    0.0f, 1.0f, 0.0f,   1.0f, 0.0f,
-            -0.5f,  0.5f, -0.5f,    0.0f, 0.0f, 1.0f,   1.0f, 1.0f,
-             0.5f,  0.5f, -0.5f,    1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
+        const int segments = 24;
+        const float radius = 0.35f;
+        const float topY = 0.5f;
+        const float tipY = -0.8f;
 
-            // Left
-            -0.5f, -0.5f, -0.5f,    1.0f, 0.0f, 0.0f,   0.0f, 0.0f,
-            -0.5f, -0.5f,  0.5f,    0.0f, 1.0f, 0.0f,   1.0f, 0.0f,
-            -0.5f,  0.5f,  0.5f,    0.0f, 0.0f, 1.0f,   1.0f, 1.0f,
-            -0.5f,  0.5f, -0.5f,    1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
+        // Tip vertex
+            // position             // color
+        vertices.insert(vertices.end(), {
+            0.0f, tipY, 0.0f,       0.6f, 0.9f, 1.0f
+        });
 
-            // Right
-             0.5f, -0.5f,  0.5f,    1.0f, 0.0f, 0.0f,   0.0f, 0.0f,
-             0.5f, -0.5f, -0.5f,    0.0f, 1.0f, 0.0f,   1.0f, 0.0f,
-             0.5f,  0.5f, -0.5f,    0.0f, 0.0f, 1.0f,   1.0f, 1.0f,
-             0.5f,  0.5f,  0.5f,    1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
+        const unsigned int tipIndex = 0;
 
-            // Top
-            -0.5f,  0.5f,  0.5f,    1.0f, 0.0f, 0.0f,   0.0f, 0.0f,
-             0.5f,  0.5f,  0.5f,    0.0f, 1.0f, 0.0f,   1.0f, 0.0f,
-             0.5f,  0.5f, -0.5f,    0.0f, 0.0f, 1.0f,   1.0f, 1.0f,
-            -0.5f,  0.5f, -0.5f,    1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
+        // Top ring vertices
+        for (int i = 0; i < segments; i++)
+        {
+            float angle = (2.0f * 3.1415926f * i ) / segments;
 
-            // Bottom
-            -0.5f, -0.5f, -0.5f,    1.0f, 0.0f, 0.0f,   0.0f, 0.0f,
-             0.5f, -0.5f, -0.5f,    0.0f, 1.0f, 0.0f,   1.0f, 0.0f,
-             0.5f, -0.5f,  0.5f,    0.0f, 0.0f, 1.0f,   1.0f, 1.0f,
-            -0.5f, -0.5f,  0.5f,    1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
-        };
-        unsigned int indices[] = {  // note that we start from 0!
-             0,  1,  2,  2,  3,  0, // Front
-             4,  5,  6,  6,  7,  4, // Back
-             8,  9, 10, 10, 11,  8, // Left
-            12, 13, 14, 14, 15, 12, // Right
-            16, 17, 18, 18, 19, 16, // Top
-            20, 21, 22, 22, 23, 20, // Bottom
-        };
+            float x = std::cos(angle) * radius;
+            float z = std::sin(angle) * radius;
+
+            vertices.insert(vertices.end(), {
+               x, topY, z,          0.7, 0.95f, 1.0f
+            });
+        }
+
+        // Side triangles
+        for (int i = 0; i < segments; i++) {
+            unsigned int current = 1 + i;
+            unsigned int next = 1 + ((i+1) % segments);
+
+            indices.insert(indices.end(), {
+                tipIndex, current, next
+            });
+        }
 
         // Vertex Array Object (VAO) - Part 2
         // Stores pointers to VAOs and tells opengl where to find them
@@ -127,18 +110,13 @@ int main()
 
         // The position attribute is made of 3 floats: x, y, z
         VertexAttribute position(Data::Type::Float, 3);
-        // Use shader location 0, read 3 floats (x,y,z) start at byte offset 0, jump 8 floats to get to the next vertex
-        vao.SetAttribute(0, position, 0, 8 * sizeof(float));
+        // Use shader location 0, read 3 floats (x,y,z) start at byte offset 0, jump 6 floats to get to the next vertex
+        vao.SetAttribute(0, position, 0, 6 * sizeof(float));
 
         // The color attribute is made of 3 floats: RGB
         VertexAttribute color(Data::Type::Float, 3);
-        // Use shader location 1, read 3 floats (r,g,b) start after the first 3 floats, jump 8 floats to get to the next vertex
-        vao.SetAttribute(1, color, 3 * sizeof(float), 8 * sizeof(float));
-
-        // The texture attribute is made of two floats
-        VertexAttribute texCoord(Data::Type::Float, 2);
-        // Use shader location 2, read 2 floats (s,t) start after the first 6 floats, jump 8 floats to get to the next vertex
-        vao.SetAttribute(2, texCoord, 6 * sizeof(float), 8 * sizeof(float));
+        // Use shader location 1, read 3 floats (r,g,b) start after the first 3 floats, jump 6 floats to get to the next vertex
+        vao.SetAttribute(1, color, 3 * sizeof(float), 6 * sizeof(float));
 
         // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
         VertexBufferObject::Unbind();
@@ -153,65 +131,10 @@ int main()
         // Uniform reference value
         GLuint uniID = glGetUniformLocation(shaderProgram.ID, "scale");
 
-        // Transformations - translating a vector of (1,0,0) by (1,1,0)
-        // Creating vec
-        glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);
-        glm::mat4 trans = glm::mat4(1.0f);
-        // Creating transformation matrix
-        trans = glm::translate(trans, glm::vec3(1.0f, 1.0f, 0.0f));
-        // Multiply vec by transformation matrix ( (1+1,0+1,0+0) = (2,1,0) ) = Works!
-        vec = trans * vec;
-        std::cout << vec.x << vec.y << vec.z << std::endl;
-
-        // Rotation and Scale
-        trans = glm::mat4(1.0f);
-        trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
-        trans = glm::scale(trans, glm::vec3(0.5f, 0.5f, 0.5f));
-        // Pass transformation matrix to shader
-        // Get id for uniform, we pass it later after shaderProgram is activated :)
-        const GLuint transformLoc = glGetUniformLocation(shaderProgram.ID, "transform");
-
-        // Texture
-        int widthImg = 0, heightImg = 0, numColCh = 0;
-        stbi_set_flip_vertically_on_load(true);
-        // Loading texture
-        const auto texturePath = get_texture_path();
-        unsigned char* bytes = stbi_load(texturePath.string().c_str(), &widthImg, &heightImg, &numColCh, 4);
-        if (!bytes)
-        {
-            throw std::runtime_error(std::string("Failed to load texture: ") + stbi_failure_reason());
-        }
-
-        // Reference variable
-        GLuint texture;
-        // Generate texture object, one texture and a reference variable
-        glGenTextures(1, &texture);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture);
-
-        // Apply settings
-        // - Image processing GL_LINEAR
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        // - Texture repeating
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-        // Generate image
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, widthImg, heightImg, 0, GL_RGBA, GL_UNSIGNED_BYTE, bytes);
-        // Generate mipmaps, which are just the same image but at smaller sizes for responsiveness
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        // Texture cleanup
-        stbi_image_free(bytes);
-        glBindTexture(GL_TEXTURE_2D, 0);
-
         // Uniform for texture coordinates
-        GLuint tex0Uni = glGetUniformLocation(shaderProgram.ID, "tex0");
+        // GLuint tex0Uni = glGetUniformLocation(shaderProgram.ID, "tex0");
         shaderProgram.Activate();
-        glUniform1i(tex0Uni, 0);
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+        // glUniform1i(tex0Uni, 0);
 
         // uncomment this call to draw in wireframe polygons.
         //glPolygonMode(NULL, NULL);
@@ -223,56 +146,48 @@ int main()
         // Render loop
         while (!window.ShouldClose())
         {
-            // input
-            // -----
             processInput(window.GetInternalWindow());
 
-            // render
-            // ------
             deviceGL.Clear(true, Color(0.2f, 0.3f, 0.3f, 1.0f), true, 1.0f);
 
-            // Update transformation matrix
-            glm::mat4 trans = glm::mat4(1.0f);
-            trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
-            trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-
-            // Drawing an object - Telling OpenGL which shader program we want to use
             shaderProgram.Activate();
 
-            // GOING 3D
-            // Initialize matrices
             glm::mat4 model = glm::mat4(1.0f);
             glm::mat4 view = glm::mat4(1.0f);
             glm::mat4 proj = glm::mat4(1.0f);
-            // Rotate our cube
-            model = glm::rotate(model, glm::radians((float)glfwGetTime() * 50), glm::vec3(1.0f, 1.0f, 0.0f));
-            // Move the world away from our camera
-            view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-            // Set our view in radians, aspect ration to our screen dimension, and the culling distance as the last two parameters
-            proj = glm::perspective(glm::radians(45.0f), (float)(SCR_WIDTH / SCR_HEIGHT), 0.1f, 100.0f );
 
-            // Get location of Uniform
+            model = glm::rotate(
+                model,
+                glm::radians((float)glfwGetTime() * 50.0f),
+                glm::vec3(1.0f, 1.0f, 0.0f)
+            );
+
+            view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+            proj = glm::perspective(
+                glm::radians(45.0f),
+                (float)SCR_WIDTH / (float)SCR_HEIGHT,
+                0.1f,
+                100.0f
+            );
+
             int modelLoc = glGetUniformLocation(shaderProgram.ID, "model");
-            // Assign value to uniform
-            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-            // Repeat for view and proj
             int viewLoc = glGetUniformLocation(shaderProgram.ID, "view");
-            glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
             int projLoc = glGetUniformLocation(shaderProgram.ID, "proj");
+
+            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+            glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
             glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
 
+            vao.Bind();
 
-            // Assigning value to uniform
-            glUniform1f(uniID, 0.5f);
-            glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
-            glBindTexture(GL_TEXTURE_2D, texture);
+            glDrawElements(
+                GL_TRIANGLES,
+                static_cast<GLsizei>(indices.size()),
+                GL_UNSIGNED_INT,
+                0
+            );
 
-            vao.Bind(); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-            //glDrawArrays(GL_TRIANGLES, 0, 3);
-            glDrawElements(GL_TRIANGLES, sizeof(indices)/sizeof(int), GL_UNSIGNED_INT, 0);
-
-            // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-            // -------------------------------------------------------------------------------
             window.SwapBuffers();
             deviceGL.PollEvents();
         }
