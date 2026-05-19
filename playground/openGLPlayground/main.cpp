@@ -20,7 +20,7 @@
 const unsigned int SCR_WIDTH = 512;
 const unsigned int SCR_HEIGHT = 512;
 
-void processInput(GLFWwindow* window);
+void processInput(GLFWwindow* window, float& cameraZ ,float& cameraVelocityZ);
 
 int main()
 {
@@ -59,11 +59,14 @@ int main()
         const float radius = 0.35f;
         const float topY = 0.5f;
         const float tipY = -0.8f;
+        const float tipX = 0.0f;
+        const float tipZ = 0.0f;
+        glm::vec3 normal = glm::normalize(glm::vec3(tipX, tipY, tipZ));
 
         // Tip vertex
-            // position             // color
+            // position             // normal
         vertices.insert(vertices.end(), {
-            0.0f, tipY, 0.0f,       0.6f, 0.9f, 1.0f
+            tipX, tipY, tipZ,       normal.x, normal.y, normal.z
         });
 
         const unsigned int tipIndex = 0;
@@ -75,9 +78,10 @@ int main()
 
             float x = std::cos(angle) * radius;
             float z = std::sin(angle) * radius;
+            normal = glm::normalize(glm::vec3(x, 0.25f, z));
 
             vertices.insert(vertices.end(), {
-               x, topY, z,          0.7, 0.95f, 1.0f
+               x, topY, z,          normal.x, normal.y, normal.z
             });
         }
 
@@ -113,10 +117,10 @@ int main()
         // Use shader location 0, read 3 floats (x,y,z) start at byte offset 0, jump 6 floats to get to the next vertex
         vao.SetAttribute(0, position, 0, 6 * sizeof(float));
 
-        // The color attribute is made of 3 floats: RGB
-        VertexAttribute color(Data::Type::Float, 3);
+        // The normal attribute is made of 3 floats: RGB
+        VertexAttribute normalV(Data::Type::Float, 3);
         // Use shader location 1, read 3 floats (r,g,b) start after the first 3 floats, jump 6 floats to get to the next vertex
-        vao.SetAttribute(1, color, 3 * sizeof(float), 6 * sizeof(float));
+        vao.SetAttribute(1, normalV, 3 * sizeof(float), 6 * sizeof(float));
 
         // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
         VertexBufferObject::Unbind();
@@ -140,13 +144,24 @@ int main()
         //glPolygonMode(NULL, NULL);
         bool PolyGonMode = false;
 
+        // Send light values to shaderProgram
+        glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), 2.0f, 2.0f, 2.0f);
+        glUniform3f(glGetUniformLocation(shaderProgram.ID, "objectColor"), 0.55f, 0.85f, 1.0f);
+        glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightColor"), 1.0f, 1.0f, 1.0f);
+
         // Depth Buffer
         deviceGL.EnableFeature(GL_DEPTH_TEST);
+
+        float cameraZ = -3.0f;
+        float cameraX = 0.0f;
+        float cameraY = 0.0f;
+        float cameraVelocityZ = 0.0f;
 
         // Render loop
         while (!window.ShouldClose())
         {
-            processInput(window.GetInternalWindow());
+
+            processInput(window.GetInternalWindow(), cameraZ, cameraVelocityZ);
 
             deviceGL.Clear(true, Color(0.2f, 0.3f, 0.3f, 1.0f), true, 1.0f);
 
@@ -156,13 +171,15 @@ int main()
             glm::mat4 view = glm::mat4(1.0f);
             glm::mat4 proj = glm::mat4(1.0f);
 
+
             model = glm::rotate(
                 model,
                 glm::radians((float)glfwGetTime() * 50.0f),
                 glm::vec3(1.0f, 1.0f, 0.0f)
             );
 
-            view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+            view = glm::translate(view, glm::vec3(cameraX, cameraY, cameraZ + cameraVelocityZ));
 
             proj = glm::perspective(
                 glm::radians(45.0f),
@@ -204,12 +221,35 @@ int main()
     }
 }
 
-void processInput(GLFWwindow* window)
+void processInput(GLFWwindow* window, float& cameraZ ,float& cameraVelocityZ)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     }
+
+    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+
+    // Move
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        cameraVelocityZ += 0.0000001f;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        cameraVelocityZ -= 0.0000001f;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+        cameraVelocityZ = 0.0f;
+    }
+
+    cameraZ += cameraVelocityZ;
 }
