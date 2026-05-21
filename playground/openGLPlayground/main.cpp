@@ -171,24 +171,27 @@ int main()
 
         const int segments = 24;
         const float radius = 0.18f;
+        const float maxRadius = 0.20f;
+        const float minRadius = 0.05f;
         const float topY = 0.5f;
         float tipY = -0.5f;
-        std::cout << "tipY: " << tipY << std::endl;
-        float tipYMax = -0.7f;
-        float tipYmin = -0.2f;
+        float tipYMax = -0.8f;
+        float tipYMin = -0.1f;
         const float roofWidth = 7.0f;
         const float roofDepth = 7.0f;
-        const int icicleCount = 3000;
-        const float minIcicleDistance = radius * 2.4f;
+        const int icicleCount = 6000;
+        const float minIcicleDistance = maxRadius * 2.2f;
 
         std::mt19937 rng(123);
         std::uniform_real_distribution<float> randomX(-roofWidth + radius, roofWidth - radius);
         std::uniform_real_distribution<float> randomZ(-roofDepth + radius, roofDepth - radius);
+        std::uniform_real_distribution<float> randomTipY(tipYMax, tipYMin);
+        std::uniform_real_distribution<float> randomRadius(minRadius, maxRadius);
 
         std::vector<glm::vec2> iciclePositions;
 
         int attempts = 0;
-        const int maxAttempts = 3000;
+        const int maxAttempts = 6000;
 
         while (iciclePositions.size() < icicleCount && attempts < maxAttempts)
         {
@@ -219,29 +222,28 @@ int main()
             const float centerX = center.x;
             const float centerZ = center.y;
 
+            std::uniform_real_distribution<float> randomRadius(minRadius, maxRadius);
+            float icicleRadius = randomRadius(rng);
+            float tipY = randomTipY(rng);
+
+            std::uniform_real_distribution<float> randomTipOffset(-0.06f, 0.06f);
+            float tipOffsetX = randomTipOffset(rng);
+            float tipOffsetZ = randomTipOffset(rng);
+
+            std::uniform_real_distribution<float> randomShape(0.75f, 1.25f);
+
             unsigned int tipIndex = static_cast<unsigned int>(vertices.size() / 6);
 
             // Source - https://stackoverflow.com/a/686373
             // Posted by John Dibling, modified by community. See post 'Timeline' for change history
             // Retrieved 2026-05-19, License - CC BY-SA 3.0
 
-            float randomNum = rand() % 3;
-            std::cout << "randomNum: " << randomNum << std::endl;
-            if (randomNum == 0) {
-                tipY = tipYMax;
-            } else if (randomNum == 1) {
-                tipY = tipYmin;
-            } else {
-                tipY = -0.5f;
-            }
-
-            std::cout << "tipY: " << tipY << std::endl;
-
 
             // Tip vertex
             // position                         // normal
             vertices.insert(vertices.end(), {
-                centerX, tipY, centerZ,          0.0f, -1.0f, 0.0f
+                centerX + tipOffsetX, tipY, centerZ + tipOffsetZ,
+                0.0f, -1.0f, 0.0f
             });
 
             unsigned int ringStartIndex = static_cast<unsigned int>(vertices.size() / 6);
@@ -251,13 +253,21 @@ int main()
             {
                 float angle = (2.0f * 3.1415926f * i ) / segments;
 
-                float localX = std::cos(angle) * radius;
-                float localZ = std::sin(angle) * radius;
+                float shapeNoise = randomShape(rng);
+
+                float localX = std::cos(angle) * icicleRadius * shapeNoise;
+                float localZ = std::sin(angle) * icicleRadius * shapeNoise;
 
                 float x = centerX + localX;
                 float z = centerZ + localZ;
 
-                glm::vec3 normal = glm::normalize(glm::vec3(localX, 0.25f, localZ));
+                float height = topY - tipY;
+
+                glm::vec3 normal = glm::normalize(glm::vec3(
+                    localX,
+                    icicleRadius / height,
+                    localZ
+                ));
 
                 vertices.insert(vertices.end(), {
                    x, topY, z,                  normal.x, normal.y, normal.z
@@ -341,12 +351,22 @@ int main()
         bool PolyGonMode = false;
 
         // Send light values to shaderProgram
-        glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), 0.0f, 0.0f, 6.0f);
-        glUniform3f(glGetUniformLocation(shaderProgram.ID, "objectColor"), 0.55f, 0.85f, 1.0f);
+        glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), 0.0f, 2.0f, 10.0f);
+        glUniform3f(glGetUniformLocation(shaderProgram.ID, "objectColor"), 0.45f, 0.85f, 1.0f);
         glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightColor"), 1.0f, 1.0f, 1.0f);
+
+        glUniform1f(glGetUniformLocation(shaderProgram.ID, "ambientStrength"), 0.18f);
+        glUniform1f(glGetUniformLocation(shaderProgram.ID, "specularStrength"), 0.9f);
+        glUniform1f(glGetUniformLocation(shaderProgram.ID, "shininess"), 64.0f);
+        glUniform1f(glGetUniformLocation(shaderProgram.ID, "rimStrength"), 0.45f);
+        glUniform1f(glGetUniformLocation(shaderProgram.ID, "alpha"), 0.96f);
 
         // Depth Buffer
         deviceGL.EnableFeature(GL_DEPTH_TEST);
+
+        // If alpha is 0.45, icicle contributes 45% and the background contributes 55%
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         float cameraZ = -6.0f;
         float cameraX = 0.0f;
@@ -366,12 +386,15 @@ int main()
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, backgroundTexture);
             glBindVertexArray(backgroundVAO);
+            glDepthMask(GL_FALSE);
             glDrawArrays(GL_TRIANGLES, 0, 6);
+            glDepthMask(GL_TRUE);
             glBindVertexArray(0);
             glEnable(GL_DEPTH_TEST);
 
             shaderProgram.Activate();
 
+            glm::vec3 cameraWorldPos(-cameraX, -cameraY, -cameraZ);
             glm::mat4 model = glm::mat4(1.0f);
             glm::mat4 view = glm::mat4(1.0f);
             glm::mat4 proj = glm::mat4(1.0f);
@@ -396,6 +419,7 @@ int main()
             int viewLoc = glGetUniformLocation(shaderProgram.ID, "view");
             int projLoc = glGetUniformLocation(shaderProgram.ID, "proj");
 
+            glUniform3f(glGetUniformLocation(shaderProgram.ID, "viewPos"), cameraWorldPos.x, cameraWorldPos.y, cameraWorldPos.z);
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
             glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
             glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
