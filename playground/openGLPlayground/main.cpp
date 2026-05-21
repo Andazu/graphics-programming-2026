@@ -7,13 +7,11 @@
 #include <iostream>
 #include <exception>
 #include <stdexcept>
-#include <array>
 #include <cmath>
-#include <cstdlib>
 #include <filesystem>
+#include <span>
 #include <string>
 #include "shaderClass.h"
-// #include <stb_image.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -24,9 +22,49 @@
 // settings
 const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
+const unsigned int FLOATS_PER_VERTEX = 6;
+const float PI = 3.1415926f;
 bool OVERLAPS = false;
 
 void processInput(GLFWwindow* window, float& cameraZ ,float& cameraVelocityZ);
+
+struct MeshData
+{
+    std::vector<float> vertices;
+    std::vector<unsigned int> indices;
+};
+
+struct IcicleSettings
+{
+    int segments = 24;
+    int count = 6000;
+    int maxPlacementAttempts = 6000;
+
+    float minRadius = 0.05f;
+    float maxRadius = 0.20f;
+
+    float topY = 0.5f;
+    float minTipY = -0.8f;
+    float maxTipY = -0.1f;
+
+    float roofWidth = 7.0f;
+    float roofDepth = 7.0f;
+    float minDistance = 0.44f;
+
+    bool allowOverlaps = false;
+};
+
+struct BackgroundQuad
+{
+    GLuint vao = 0;
+    GLuint vbo = 0;
+    GLuint texture = 0;
+};
+
+unsigned int getNextVertexIndex(const MeshData& mesh)
+{
+    return static_cast<unsigned int>(mesh.vertices.size() / FLOATS_PER_VERTEX);
+}
 
 std::filesystem::path resolveTexturePath(const char* filename)
 {
@@ -101,9 +139,178 @@ GLuint loadTexture(const char* filename)
     return textureID;
 }
 
+std::vector<glm::vec2> generateIciclePositions(const IcicleSettings& settings, std::mt19937& rng)
+{
+    std::uniform_real_distribution<float> randomX(
+        -settings.roofWidth + settings.maxRadius,
+        settings.roofWidth - settings.maxRadius
+    );
+    std::uniform_real_distribution<float> randomZ(
+        -settings.roofDepth + settings.maxRadius,
+        settings.roofDepth - settings.maxRadius
+    );
+
+    std::vector<glm::vec2> positions;
+
+    int attempts = 0;
+    while (static_cast<int>(positions.size()) < settings.count && attempts < settings.maxPlacementAttempts)
+    {
+        attempts++;
+
+        glm::vec2 candidate(randomX(rng), randomZ(rng));
+        bool overlaps = false;
+
+        for (const glm::vec2& existing : positions)
+        {
+            float distance = glm::length(candidate - existing);
+
+            if (distance < settings.minDistance && !settings.allowOverlaps)
+            {
+                overlaps = true;
+                break;
+            }
+        }
+
+        if (!overlaps)
+        {
+            positions.push_back(candidate);
+        }
+    }
+
+    return positions;
+}
+
+void appendIcicleMesh(MeshData& mesh, const glm::vec2& center, const IcicleSettings& settings, std::mt19937& rng)
+{
+    std::uniform_real_distribution<float> randomRadius(settings.minRadius, settings.maxRadius);
+    std::uniform_real_distribution<float> randomTipY(settings.minTipY, settings.maxTipY);
+    std::uniform_real_distribution<float> randomTipOffset(-0.06f, 0.06f);
+    std::uniform_real_distribution<float> randomShape(0.75f, 1.25f);
+
+    const float centerX = center.x;
+    const float centerZ = center.y;
+    const float icicleRadius = randomRadius(rng);
+    const float tipY = randomTipY(rng);
+    const float tipOffsetX = randomTipOffset(rng);
+    const float tipOffsetZ = randomTipOffset(rng);
+
+    unsigned int tipIndex = getNextVertexIndex(mesh);
+
+    // Tip vertex. The small x/z offset makes each icicle lean slightly.
+    // position                         // normal
+    mesh.vertices.insert(mesh.vertices.end(), {
+        centerX + tipOffsetX, tipY, centerZ + tipOffsetZ,
+        0.0f, -1.0f, 0.0f
+    });
+
+    unsigned int ringStartIndex = getNextVertexIndex(mesh);
+
+    // Top ring vertices
+    for (int i = 0; i < settings.segments; i++)
+    {
+        float angle = (2.0f * PI * i ) / settings.segments;
+        float shapeNoise = randomShape(rng);
+
+        float localX = std::cos(angle) * icicleRadius * shapeNoise;
+        float localZ = std::sin(angle) * icicleRadius * shapeNoise;
+
+        float x = centerX + localX;
+        float z = centerZ + localZ;
+        float height = settings.topY - tipY;
+
+        glm::vec3 normal = glm::normalize(glm::vec3(
+            localX,
+            icicleRadius / height,
+            localZ
+        ));
+
+        mesh.vertices.insert(mesh.vertices.end(), {
+           x, settings.topY, z,                  normal.x, normal.y, normal.z
+        });
+    }
+
+    // Side triangles
+    for (int i = 0; i < settings.segments; i++) {
+        unsigned int current = ringStartIndex + i;
+        unsigned int next = ringStartIndex + ((i+1) % settings.segments);
+
+        mesh.indices.insert(mesh.indices.end(), {
+            tipIndex, current, next
+        });
+    }
+}
+
+void appendRoofMesh(MeshData& mesh, const IcicleSettings& settings)
+{
+    // Ceiling
+    unsigned int roofStartIndex = getNextVertexIndex(mesh);
+
+        // position                                     // normal
+    mesh.vertices.insert(mesh.vertices.end(), {
+        -settings.roofWidth, settings.topY, -settings.roofDepth,       0.0f, -1.0f, 0.0f,
+        settings.roofWidth, settings.topY, -settings.roofDepth,        0.0f, -1.0f, 0.0f,
+        settings.roofWidth, settings.topY,  settings.roofDepth,        0.0f, -1.0f, 0.0f,
+        -settings.roofWidth, settings.topY,  settings.roofDepth,       0.0f, -1.0f, 0.0f
+    });
+
+    mesh.indices.insert(mesh.indices.end(), {
+        roofStartIndex + 0, roofStartIndex + 2, roofStartIndex + 1,
+        roofStartIndex + 0, roofStartIndex + 3, roofStartIndex + 2
+    });
+}
+
+BackgroundQuad createBackgroundQuad(GLuint texture)
+{
+    float backgroundVertices[] = {
+        // position    // tex coords
+        -1.0f,  1.0f,  0.0f, 1.0f,
+        -1.0f, -1.0f,  0.0f, 0.0f,
+         1.0f, -1.0f,  1.0f, 0.0f,
+
+        -1.0f,  1.0f,  0.0f, 1.0f,
+         1.0f, -1.0f,  1.0f, 0.0f,
+         1.0f,  1.0f,  1.0f, 1.0f
+    };
+
+    BackgroundQuad background;
+    background.texture = texture;
+
+    glGenVertexArrays(1, &background.vao);
+    glGenBuffers(1, &background.vbo);
+
+    glBindVertexArray(background.vao);
+    glBindBuffer(GL_ARRAY_BUFFER, background.vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(backgroundVertices), backgroundVertices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    return background;
+}
+
+void drawBackground(const BackgroundQuad& background, Shader& backgroundShader)
+{
+    glDisable(GL_DEPTH_TEST);
+    backgroundShader.Activate();
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, background.texture);
+    glBindVertexArray(background.vao);
+    glDepthMask(GL_FALSE);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDepthMask(GL_TRUE);
+    glBindVertexArray(0);
+    glEnable(GL_DEPTH_TEST);
+}
+
 int main()
 {
-    try {
+    try {  
         // glfw: initialize and configure
         // ------------------------------
         DeviceGL deviceGL;
@@ -131,175 +338,24 @@ int main()
         Shader shaderProgram("default.vert", "default.frag");
         Shader backgroundShader("background.vert", "background.frag");
 
-        float backgroundVertices[] = {
-            // position    // tex coords
-            -1.0f,  1.0f,  0.0f, 1.0f,
-            -1.0f, -1.0f,  0.0f, 0.0f,
-             1.0f, -1.0f,  1.0f, 0.0f,
-
-            -1.0f,  1.0f,  0.0f, 1.0f,
-             1.0f, -1.0f,  1.0f, 0.0f,
-             1.0f,  1.0f,  1.0f, 1.0f
-        };
-
-        GLuint backgroundVAO = 0;
-        GLuint backgroundVBO = 0;
-        glGenVertexArrays(1, &backgroundVAO);
-        glGenBuffers(1, &backgroundVBO);
-
-        glBindVertexArray(backgroundVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, backgroundVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(backgroundVertices), backgroundVertices, GL_STATIC_DRAW);
-
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(0);
-
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-        glEnableVertexAttribArray(1);
-
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
-
-        GLuint backgroundTexture = loadTexture("iceCave.jpg");
+        BackgroundQuad background = createBackgroundQuad(loadTexture("iceCave.jpg"));
 
         backgroundShader.Activate();
         glUniform1i(glGetUniformLocation(backgroundShader.ID, "backgroundTexture"), 0);
 
-        // Vertex data for a icicles with generated arrays
-        std::vector<float> vertices;
-        std::vector<unsigned int> indices;
-
-        const int segments = 24;
-        const float radius = 0.18f;
-        const float maxRadius = 0.20f;
-        const float minRadius = 0.05f;
-        const float topY = 0.5f;
-        float tipY = -0.5f;
-        float tipYMax = -0.8f;
-        float tipYMin = -0.1f;
-        const float roofWidth = 7.0f;
-        const float roofDepth = 7.0f;
-        const int icicleCount = 6000;
-        const float minIcicleDistance = maxRadius * 2.2f;
-
+        // Vertex data for icicles and roof, generated once on the CPU.
+        MeshData sceneMesh;
+        IcicleSettings icicleSettings;
+        icicleSettings.allowOverlaps = OVERLAPS;
         std::mt19937 rng(123);
-        std::uniform_real_distribution<float> randomX(-roofWidth + radius, roofWidth - radius);
-        std::uniform_real_distribution<float> randomZ(-roofDepth + radius, roofDepth - radius);
-        std::uniform_real_distribution<float> randomTipY(tipYMax, tipYMin);
-        std::uniform_real_distribution<float> randomRadius(minRadius, maxRadius);
 
-        std::vector<glm::vec2> iciclePositions;
-
-        int attempts = 0;
-        const int maxAttempts = 6000;
-
-        while (iciclePositions.size() < icicleCount && attempts < maxAttempts)
-        {
-            attempts++;
-
-            glm::vec2 candidate(randomX(rng), randomZ(rng));
-            bool overlaps = false;
-
-            for (const glm::vec2& existing : iciclePositions)
-            {
-                float distance = glm::length(candidate - existing);
-
-                if (distance < minIcicleDistance && !OVERLAPS)
-                {
-                    overlaps = true;
-                    break;
-                }
-            }
-
-            if (!overlaps)
-            {
-                iciclePositions.push_back(candidate);
-            }
-        }
-
+        std::vector<glm::vec2> iciclePositions = generateIciclePositions(icicleSettings, rng);
         for (const glm::vec2& center : iciclePositions)
         {
-            const float centerX = center.x;
-            const float centerZ = center.y;
-
-            std::uniform_real_distribution<float> randomRadius(minRadius, maxRadius);
-            float icicleRadius = randomRadius(rng);
-            float tipY = randomTipY(rng);
-
-            std::uniform_real_distribution<float> randomTipOffset(-0.06f, 0.06f);
-            float tipOffsetX = randomTipOffset(rng);
-            float tipOffsetZ = randomTipOffset(rng);
-
-            std::uniform_real_distribution<float> randomShape(0.75f, 1.25f);
-
-            unsigned int tipIndex = static_cast<unsigned int>(vertices.size() / 6);
-
-            // Source - https://stackoverflow.com/a/686373
-            // Posted by John Dibling, modified by community. See post 'Timeline' for change history
-            // Retrieved 2026-05-19, License - CC BY-SA 3.0
-
-
-            // Tip vertex
-            // position                         // normal
-            vertices.insert(vertices.end(), {
-                centerX + tipOffsetX, tipY, centerZ + tipOffsetZ,
-                0.0f, -1.0f, 0.0f
-            });
-
-            unsigned int ringStartIndex = static_cast<unsigned int>(vertices.size() / 6);
-
-            // Top ring vertices
-            for (int i = 0; i < segments; i++)
-            {
-                float angle = (2.0f * 3.1415926f * i ) / segments;
-
-                float shapeNoise = randomShape(rng);
-
-                float localX = std::cos(angle) * icicleRadius * shapeNoise;
-                float localZ = std::sin(angle) * icicleRadius * shapeNoise;
-
-                float x = centerX + localX;
-                float z = centerZ + localZ;
-
-                float height = topY - tipY;
-
-                glm::vec3 normal = glm::normalize(glm::vec3(
-                    localX,
-                    icicleRadius / height,
-                    localZ
-                ));
-
-                vertices.insert(vertices.end(), {
-                   x, topY, z,                  normal.x, normal.y, normal.z
-                });
-            }
-
-            // Side triangles
-            for (int i = 0; i < segments; i++) {
-                unsigned int current = ringStartIndex + i;
-                unsigned int next = ringStartIndex + ((i+1) % segments);
-
-                indices.insert(indices.end(), {
-                    tipIndex, current, next
-                });
-            }
+            appendIcicleMesh(sceneMesh, center, icicleSettings, rng);
         }
 
-        // Ceiling
-        unsigned int roofStartIndex = static_cast<unsigned int>(vertices.size() / 6);
-
-            // position                         // normal
-        vertices.insert(vertices.end(), {
-            -roofWidth, topY, -roofDepth,       0.0f, -1.0f, 0.0f,
-            roofWidth, topY, -roofDepth,        0.0f, -1.0f, 0.0f,
-            roofWidth, topY,  roofDepth,        0.0f, -1.0f, 0.0f,
-            -roofWidth, topY,  roofDepth,       0.0f, -1.0f, 0.0f
-        });
-
-        indices.insert(indices.end(), {
-            roofStartIndex + 0, roofStartIndex + 2, roofStartIndex + 1,
-            roofStartIndex + 0, roofStartIndex + 3, roofStartIndex + 2
-        });
+        appendRoofMesh(sceneMesh, icicleSettings);
 
         // Vertex Array Object (VAO) - Part 2
         // Stores pointers to VAOs and tells opengl where to find them
@@ -310,23 +366,23 @@ int main()
         // An array of references to the vertex data
         VertexBufferObject vbo;
         vbo.Bind();
-        vbo.AllocateData<float>(std::span(vertices));
+        vbo.AllocateData<float>(std::span(sceneMesh.vertices));
 
         // Element Buffer Object (EBO) - Part 3
         // Stores indicies that describe which vertices to draw - Indexed drawing!
         ElementBufferObject ebo;
         ebo.Bind();
-        ebo.AllocateData<unsigned int>(std::span(indices));
+        ebo.AllocateData<unsigned int>(std::span(sceneMesh.indices));
 
         // The position attribute is made of 3 floats: x, y, z
         VertexAttribute position(Data::Type::Float, 3);
-        // Use shader location 0, read 3 floats (x,y,z) start at byte offset 0, jump 6 floats to get to the next vertex
-        vao.SetAttribute(0, position, 0, 6 * sizeof(float));
+        // Use shader location 0, read 3 floats (x,y,z) start at byte offset 0, jump one full vertex to get to the next position
+        vao.SetAttribute(0, position, 0, FLOATS_PER_VERTEX * sizeof(float));
 
-        // The normal attribute is made of 3 floats: RGB
+        // The normal attribute is made of 3 floats: nx, ny, nz
         VertexAttribute normalV(Data::Type::Float, 3);
-        // Use shader location 1, read 3 floats (r,g,b) start after the first 3 floats, jump 6 floats to get to the next vertex
-        vao.SetAttribute(1, normalV, 3 * sizeof(float), 6 * sizeof(float));
+        // Use shader location 1, read 3 floats after the position, jump one full vertex to get to the next normal
+        vao.SetAttribute(1, normalV, 3 * sizeof(float), FLOATS_PER_VERTEX * sizeof(float));
 
         // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
         VertexBufferObject::Unbind();
@@ -338,17 +394,7 @@ int main()
         // Now we can unbind the EBO as well
         ElementBufferObject::Unbind();
 
-        // Uniform reference value
-        GLuint uniID = glGetUniformLocation(shaderProgram.ID, "scale");
-
-        // Uniform for texture coordinates
-        // GLuint tex0Uni = glGetUniformLocation(shaderProgram.ID, "tex0");
         shaderProgram.Activate();
-        // glUniform1i(tex0Uni, 0);
-
-        // uncomment this call to draw in wireframe polygons.
-        //glPolygonMode(NULL, NULL);
-        bool PolyGonMode = false;
 
         // Send light values to shaderProgram
         glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), 0.0f, 2.0f, 10.0f);
@@ -381,16 +427,7 @@ int main()
 
             deviceGL.Clear(true, Color(0.2f, 0.3f, 0.3f, 1.0f), true, 1.0f);
 
-            glDisable(GL_DEPTH_TEST);
-            backgroundShader.Activate();
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, backgroundTexture);
-            glBindVertexArray(backgroundVAO);
-            glDepthMask(GL_FALSE);
-            glDrawArrays(GL_TRIANGLES, 0, 6);
-            glDepthMask(GL_TRUE);
-            glBindVertexArray(0);
-            glEnable(GL_DEPTH_TEST);
+            drawBackground(background, backgroundShader);
 
             shaderProgram.Activate();
 
@@ -428,7 +465,7 @@ int main()
 
             glDrawElements(
                 GL_TRIANGLES,
-                static_cast<GLsizei>(indices.size()),
+                static_cast<GLsizei>(sceneMesh.indices.size()),
                 GL_UNSIGNED_INT,
                 0
             );

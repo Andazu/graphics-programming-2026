@@ -1,0 +1,1060 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R 19 0 R 21 0 R 23 0 R 25 0 R 27 0 R 29 0 R 31 0 R 33 0 R] /Count 15 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Length 2642 >>
+stream
+BT /F1 7 Tf 30 560 Td 9 TL
+(Page 1 / 15) Tj T*
+T*
+(Procedural Icicle Project - Code Listing) Tj T*
+(Generated from project source files) Tj T*
+() Tj T*
+(Included files:) Tj T*
+(  playground/openGLPlayground/main.cpp) Tj T*
+(  playground/openGLPlayground/shaderClass.h) Tj T*
+(  playground/openGLPlayground/shaderClass.cpp) Tj T*
+(  playground/Resource Files/Shaders/default.vert) Tj T*
+(  playground/Resource Files/Shaders/default.frag) Tj T*
+(  playground/Resource Files/Shaders/background.vert) Tj T*
+(  playground/Resource Files/Shaders/background.frag) Tj T*
+() Tj T*
+(External dependencies referenced by this code are not included: ituGL, GLAD, GLFW, GLM, stb_image, and texture assets such as iceCave.jpg.) Tj T*
+() Tj T*
+(========================================================================================================================) Tj T*
+(playground/openGLPlayground/main.cpp) Tj T*
+(========================================================================================================================) Tj T*
+(   1: #include <ituGL/core/DeviceGL.h>) Tj T*
+(   2: #include <ituGL/application/Window.h>) Tj T*
+(   3: #include <ituGL/geometry/VertexBufferObject.h>) Tj T*
+(   4: #include <ituGL/geometry/VertexArrayObject.h>) Tj T*
+(   5: #include <ituGL/geometry/VertexAttribute.h>) Tj T*
+(   6: #include <ituGL/geometry/ElementBufferObject.h>) Tj T*
+(   7: #include <iostream>) Tj T*
+(   8: #include <exception>) Tj T*
+(   9: #include <stdexcept>) Tj T*
+(  10: #include <cmath>) Tj T*
+(  11: #include <filesystem>) Tj T*
+(  12: #include <span>) Tj T*
+(  13: #include <string>) Tj T*
+(  14: #include "shaderClass.h") Tj T*
+(  15: #include <glm/glm.hpp>) Tj T*
+(  16: #include <glm/gtc/matrix_transform.hpp>) Tj T*
+(  17: #include <glm/gtc/type_ptr.hpp>) Tj T*
+(  18: #include <vector>) Tj T*
+(  19: #include <random>) Tj T*
+(  20: #include <stb_image.h>) Tj T*
+(  21: ) Tj T*
+(  22: // settings) Tj T*
+(  23: const unsigned int SCR_WIDTH = 1920;) Tj T*
+(  24: const unsigned int SCR_HEIGHT = 1080;) Tj T*
+(  25: const unsigned int FLOATS_PER_VERTEX = 6;) Tj T*
+(  26: const float PI = 3.1415926f;) Tj T*
+(  27: bool OVERLAPS = false;) Tj T*
+(  28: ) Tj T*
+(  29: void processInput\(GLFWwindow* window, float& cameraZ ,float& cameraVelocityZ\);) Tj T*
+(  30: ) Tj T*
+(  31: struct MeshData) Tj T*
+(  32: {) Tj T*
+(  33:     std::vector<float> vertices;) Tj T*
+(  34:     std::vector<unsigned int> indices;) Tj T*
+(  35: };) Tj T*
+(  36: ) Tj T*
+(  37: struct IcicleSettings) Tj T*
+(  38: {) Tj T*
+(  39:     int segments = 24;) Tj T*
+(  40:     int count = 6000;) Tj T*
+(  41:     int maxPlacementAttempts = 6000;) Tj T*
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 3 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 2296 >>
+stream
+BT /F1 7 Tf 30 560 Td 9 TL
+(Page 2 / 15) Tj T*
+T*
+(  42: ) Tj T*
+(  43:     float minRadius = 0.05f;) Tj T*
+(  44:     float maxRadius = 0.20f;) Tj T*
+(  45: ) Tj T*
+(  46:     float topY = 0.5f;) Tj T*
+(  47:     float minTipY = -0.8f;) Tj T*
+(  48:     float maxTipY = -0.1f;) Tj T*
+(  49: ) Tj T*
+(  50:     float roofWidth = 7.0f;) Tj T*
+(  51:     float roofDepth = 7.0f;) Tj T*
+(  52:     float minDistance = 0.44f;) Tj T*
+(  53: ) Tj T*
+(  54:     bool allowOverlaps = false;) Tj T*
+(  55: };) Tj T*
+(  56: ) Tj T*
+(  57: struct BackgroundQuad) Tj T*
+(  58: {) Tj T*
+(  59:     GLuint vao = 0;) Tj T*
+(  60:     GLuint vbo = 0;) Tj T*
+(  61:     GLuint texture = 0;) Tj T*
+(  62: };) Tj T*
+(  63: ) Tj T*
+(  64: unsigned int getNextVertexIndex\(const MeshData& mesh\)) Tj T*
+(  65: {) Tj T*
+(  66:     return static_cast<unsigned int>\(mesh.vertices.size\(\) / FLOATS_PER_VERTEX\);) Tj T*
+(  67: }) Tj T*
+(  68: ) Tj T*
+(  69: std::filesystem::path resolveTexturePath\(const char* filename\)) Tj T*
+(  70: {) Tj T*
+(  71:     const std::filesystem::path textureFile\(filename\);) Tj T*
+(  72:     std::filesystem::path current = std::filesystem::current_path\(\);) Tj T*
+(  73: ) Tj T*
+(  74:     for \(int i = 0; i < 6; ++i\)) Tj T*
+(  75:     {) Tj T*
+(  76:         const auto resourcePath = current / "playground" / "Resource Files" / "Textures" / textureFile;) Tj T*
+(  77:         if \(std::filesystem::exists\(resourcePath\)\)) Tj T*
+(  78:         {) Tj T*
+(  79:             return resourcePath;) Tj T*
+(  80:         }) Tj T*
+(  81: ) Tj T*
+(  82:         const auto localResourcePath = current / "Resource Files" / "Textures" / textureFile;) Tj T*
+(  83:         if \(std::filesystem::exists\(localResourcePath\)\)) Tj T*
+(  84:         {) Tj T*
+(  85:             return localResourcePath;) Tj T*
+(  86:         }) Tj T*
+(  87: ) Tj T*
+(  88:         if \(!current.has_parent_path\(\)\)) Tj T*
+(  89:         {) Tj T*
+(  90:             break;) Tj T*
+(  91:         }) Tj T*
+(  92: ) Tj T*
+(  93:         current = current.parent_path\(\);) Tj T*
+(  94:     }) Tj T*
+(  95: ) Tj T*
+(  96:     throw std::runtime_error\(std::string\("Could not find texture file: "\) + filename\);) Tj T*
+(  97: }) Tj T*
+(  98: ) Tj T*
+(  99: GLuint loadTexture\(const char* filename\)) Tj T*
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 3 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 2637 >>
+stream
+BT /F1 7 Tf 30 560 Td 9 TL
+(Page 3 / 15) Tj T*
+T*
+( 100: {) Tj T*
+( 101:     const std::filesystem::path texturePath = resolveTexturePath\(filename\);) Tj T*
+( 102: ) Tj T*
+( 103:     int width = 0;) Tj T*
+( 104:     int height = 0;) Tj T*
+( 105:     int channels = 0;) Tj T*
+( 106: ) Tj T*
+( 107:     stbi_set_flip_vertically_on_load\(true\);) Tj T*
+( 108:     unsigned char* data = stbi_load\(texturePath.string\(\).c_str\(\), &width, &height, &channels, 0\);) Tj T*
+( 109: ) Tj T*
+( 110:     if \(!data\)) Tj T*
+( 111:     {) Tj T*
+( 112:         throw std::runtime_error\("Failed to load texture file: " + texturePath.string\(\)\);) Tj T*
+( 113:     }) Tj T*
+( 114: ) Tj T*
+( 115:     GLenum format = GL_RGB;) Tj T*
+( 116:     if \(channels == 1\)) Tj T*
+( 117:     {) Tj T*
+( 118:         format = GL_RED;) Tj T*
+( 119:     }) Tj T*
+( 120:     else if \(channels == 4\)) Tj T*
+( 121:     {) Tj T*
+( 122:         format = GL_RGBA;) Tj T*
+( 123:     }) Tj T*
+( 124: ) Tj T*
+( 125:     GLuint textureID = 0;) Tj T*
+( 126:     glGenTextures\(1, &textureID\);) Tj T*
+( 127:     glBindTexture\(GL_TEXTURE_2D, textureID\);) Tj T*
+( 128: ) Tj T*
+( 129:     glTexParameteri\(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE\);) Tj T*
+( 130:     glTexParameteri\(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE\);) Tj T*
+( 131:     glTexParameteri\(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR\);) Tj T*
+( 132:     glTexParameteri\(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR\);) Tj T*
+( 133: ) Tj T*
+( 134:     glTexImage2D\(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data\);) Tj T*
+( 135:     glGenerateMipmap\(GL_TEXTURE_2D\);) Tj T*
+( 136: ) Tj T*
+( 137:     stbi_image_free\(data\);) Tj T*
+( 138: ) Tj T*
+( 139:     return textureID;) Tj T*
+( 140: }) Tj T*
+( 141: ) Tj T*
+( 142: std::vector<glm::vec2> generateIciclePositions\(const IcicleSettings& settings, std::mt19937& rng\)) Tj T*
+( 143: {) Tj T*
+( 144:     std::uniform_real_distribution<float> randomX\() Tj T*
+( 145:         -settings.roofWidth + settings.maxRadius,) Tj T*
+( 146:         settings.roofWidth - settings.maxRadius) Tj T*
+( 147:     \);) Tj T*
+( 148:     std::uniform_real_distribution<float> randomZ\() Tj T*
+( 149:         -settings.roofDepth + settings.maxRadius,) Tj T*
+( 150:         settings.roofDepth - settings.maxRadius) Tj T*
+( 151:     \);) Tj T*
+( 152: ) Tj T*
+( 153:     std::vector<glm::vec2> positions;) Tj T*
+( 154: ) Tj T*
+( 155:     int attempts = 0;) Tj T*
+( 156:     while \(static_cast<int>\(positions.size\(\)\) < settings.count && attempts < settings.maxPlacementAttempts\)) Tj T*
+( 157:     {) Tj T*
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 3 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Length 2855 >>
+stream
+BT /F1 7 Tf 30 560 Td 9 TL
+(Page 4 / 15) Tj T*
+T*
+( 158:         attempts++;) Tj T*
+( 159: ) Tj T*
+( 160:         glm::vec2 candidate\(randomX\(rng\), randomZ\(rng\)\);) Tj T*
+( 161:         bool overlaps = false;) Tj T*
+( 162: ) Tj T*
+( 163:         for \(const glm::vec2& existing : positions\)) Tj T*
+( 164:         {) Tj T*
+( 165:             float distance = glm::length\(candidate - existing\);) Tj T*
+( 166: ) Tj T*
+( 167:             if \(distance < settings.minDistance && !settings.allowOverlaps\)) Tj T*
+( 168:             {) Tj T*
+( 169:                 overlaps = true;) Tj T*
+( 170:                 break;) Tj T*
+( 171:             }) Tj T*
+( 172:         }) Tj T*
+( 173: ) Tj T*
+( 174:         if \(!overlaps\)) Tj T*
+( 175:         {) Tj T*
+( 176:             positions.push_back\(candidate\);) Tj T*
+( 177:         }) Tj T*
+( 178:     }) Tj T*
+( 179: ) Tj T*
+( 180:     return positions;) Tj T*
+( 181: }) Tj T*
+( 182: ) Tj T*
+( 183: void appendIcicleMesh\(MeshData& mesh, const glm::vec2& center, const IcicleSettings& settings, std::mt19937& rng\)) Tj T*
+( 184: {) Tj T*
+( 185:     std::uniform_real_distribution<float> randomRadius\(settings.minRadius, settings.maxRadius\);) Tj T*
+( 186:     std::uniform_real_distribution<float> randomTipY\(settings.minTipY, settings.maxTipY\);) Tj T*
+( 187:     std::uniform_real_distribution<float> randomTipOffset\(-0.06f, 0.06f\);) Tj T*
+( 188:     std::uniform_real_distribution<float> randomShape\(0.75f, 1.25f\);) Tj T*
+( 189: ) Tj T*
+( 190:     const float centerX = center.x;) Tj T*
+( 191:     const float centerZ = center.y;) Tj T*
+( 192:     const float icicleRadius = randomRadius\(rng\);) Tj T*
+( 193:     const float tipY = randomTipY\(rng\);) Tj T*
+( 194:     const float tipOffsetX = randomTipOffset\(rng\);) Tj T*
+( 195:     const float tipOffsetZ = randomTipOffset\(rng\);) Tj T*
+( 196: ) Tj T*
+( 197:     unsigned int tipIndex = getNextVertexIndex\(mesh\);) Tj T*
+( 198: ) Tj T*
+( 199:     // Tip vertex. The small x/z offset makes each icicle lean slightly.) Tj T*
+( 200:     // position                         // normal) Tj T*
+( 201:     mesh.vertices.insert\(mesh.vertices.end\(\), {) Tj T*
+( 202:         centerX + tipOffsetX, tipY, centerZ + tipOffsetZ,) Tj T*
+( 203:         0.0f, -1.0f, 0.0f) Tj T*
+( 204:     }\);) Tj T*
+( 205: ) Tj T*
+( 206:     unsigned int ringStartIndex = getNextVertexIndex\(mesh\);) Tj T*
+( 207: ) Tj T*
+( 208:     // Top ring vertices) Tj T*
+( 209:     for \(int i = 0; i < settings.segments; i++\)) Tj T*
+( 210:     {) Tj T*
+( 211:         float angle = \(2.0f * PI * i \) / settings.segments;) Tj T*
+( 212:         float shapeNoise = randomShape\(rng\);) Tj T*
+( 213: ) Tj T*
+( 214:         float localX = std::cos\(angle\) * icicleRadius * shapeNoise;) Tj T*
+( 215:         float localZ = std::sin\(angle\) * icicleRadius * shapeNoise;) Tj T*
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 3 0 R >> >> /Contents 10 0 R >>
+endobj
+12 0 obj
+<< /Length 2772 >>
+stream
+BT /F1 7 Tf 30 560 Td 9 TL
+(Page 5 / 15) Tj T*
+T*
+( 216: ) Tj T*
+( 217:         float x = centerX + localX;) Tj T*
+( 218:         float z = centerZ + localZ;) Tj T*
+( 219:         float height = settings.topY - tipY;) Tj T*
+( 220: ) Tj T*
+( 221:         glm::vec3 normal = glm::normalize\(glm::vec3\() Tj T*
+( 222:             localX,) Tj T*
+( 223:             icicleRadius / height,) Tj T*
+( 224:             localZ) Tj T*
+( 225:         \)\);) Tj T*
+( 226: ) Tj T*
+( 227:         mesh.vertices.insert\(mesh.vertices.end\(\), {) Tj T*
+( 228:            x, settings.topY, z,                  normal.x, normal.y, normal.z) Tj T*
+( 229:         }\);) Tj T*
+( 230:     }) Tj T*
+( 231: ) Tj T*
+( 232:     // Side triangles) Tj T*
+( 233:     for \(int i = 0; i < settings.segments; i++\) {) Tj T*
+( 234:         unsigned int current = ringStartIndex + i;) Tj T*
+( 235:         unsigned int next = ringStartIndex + \(\(i+1\) % settings.segments\);) Tj T*
+( 236: ) Tj T*
+( 237:         mesh.indices.insert\(mesh.indices.end\(\), {) Tj T*
+( 238:             tipIndex, current, next) Tj T*
+( 239:         }\);) Tj T*
+( 240:     }) Tj T*
+( 241: }) Tj T*
+( 242: ) Tj T*
+( 243: void appendRoofMesh\(MeshData& mesh, const IcicleSettings& settings\)) Tj T*
+( 244: {) Tj T*
+( 245:     // Ceiling) Tj T*
+( 246:     unsigned int roofStartIndex = getNextVertexIndex\(mesh\);) Tj T*
+( 247: ) Tj T*
+( 248:         // position                                     // normal) Tj T*
+( 249:     mesh.vertices.insert\(mesh.vertices.end\(\), {) Tj T*
+( 250:         -settings.roofWidth, settings.topY, -settings.roofDepth,       0.0f, -1.0f, 0.0f,) Tj T*
+( 251:         settings.roofWidth, settings.topY, -settings.roofDepth,        0.0f, -1.0f, 0.0f,) Tj T*
+( 252:         settings.roofWidth, settings.topY,  settings.roofDepth,        0.0f, -1.0f, 0.0f,) Tj T*
+( 253:         -settings.roofWidth, settings.topY,  settings.roofDepth,       0.0f, -1.0f, 0.0f) Tj T*
+( 254:     }\);) Tj T*
+( 255: ) Tj T*
+( 256:     mesh.indices.insert\(mesh.indices.end\(\), {) Tj T*
+( 257:         roofStartIndex + 0, roofStartIndex + 2, roofStartIndex + 1,) Tj T*
+( 258:         roofStartIndex + 0, roofStartIndex + 3, roofStartIndex + 2) Tj T*
+( 259:     }\);) Tj T*
+( 260: }) Tj T*
+( 261: ) Tj T*
+( 262: BackgroundQuad createBackgroundQuad\(GLuint texture\)) Tj T*
+( 263: {) Tj T*
+( 264:     float backgroundVertices[] = {) Tj T*
+( 265:         // position    // tex coords) Tj T*
+( 266:         -1.0f,  1.0f,  0.0f, 1.0f,) Tj T*
+( 267:         -1.0f, -1.0f,  0.0f, 0.0f,) Tj T*
+( 268:          1.0f, -1.0f,  1.0f, 0.0f,) Tj T*
+( 269: ) Tj T*
+( 270:         -1.0f,  1.0f,  0.0f, 1.0f,) Tj T*
+( 271:          1.0f, -1.0f,  1.0f, 0.0f,) Tj T*
+( 272:          1.0f,  1.0f,  1.0f, 1.0f) Tj T*
+( 273:     };) Tj T*
+ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 3 0 R >> >> /Contents 12 0 R >>
+endobj
+14 0 obj
+<< /Length 2634 >>
+stream
+BT /F1 7 Tf 30 560 Td 9 TL
+(Page 6 / 15) Tj T*
+T*
+( 274: ) Tj T*
+( 275:     BackgroundQuad background;) Tj T*
+( 276:     background.texture = texture;) Tj T*
+( 277: ) Tj T*
+( 278:     glGenVertexArrays\(1, &background.vao\);) Tj T*
+( 279:     glGenBuffers\(1, &background.vbo\);) Tj T*
+( 280: ) Tj T*
+( 281:     glBindVertexArray\(background.vao\);) Tj T*
+( 282:     glBindBuffer\(GL_ARRAY_BUFFER, background.vbo\);) Tj T*
+( 283:     glBufferData\(GL_ARRAY_BUFFER, sizeof\(backgroundVertices\), backgroundVertices, GL_STATIC_DRAW\);) Tj T*
+( 284: ) Tj T*
+( 285:     glVertexAttribPointer\(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof\(float\), \(void*\)0\);) Tj T*
+( 286:     glEnableVertexAttribArray\(0\);) Tj T*
+( 287: ) Tj T*
+( 288:     glVertexAttribPointer\(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof\(float\), \(void*\)\(2 * sizeof\(float\)\)\);) Tj T*
+( 289:     glEnableVertexAttribArray\(1\);) Tj T*
+( 290: ) Tj T*
+( 291:     glBindBuffer\(GL_ARRAY_BUFFER, 0\);) Tj T*
+( 292:     glBindVertexArray\(0\);) Tj T*
+( 293: ) Tj T*
+( 294:     return background;) Tj T*
+( 295: }) Tj T*
+( 296: ) Tj T*
+( 297: void drawBackground\(const BackgroundQuad& background, Shader& backgroundShader\)) Tj T*
+( 298: {) Tj T*
+( 299:     glDisable\(GL_DEPTH_TEST\);) Tj T*
+( 300:     backgroundShader.Activate\(\);) Tj T*
+( 301:     glActiveTexture\(GL_TEXTURE0\);) Tj T*
+( 302:     glBindTexture\(GL_TEXTURE_2D, background.texture\);) Tj T*
+( 303:     glBindVertexArray\(background.vao\);) Tj T*
+( 304:     glDepthMask\(GL_FALSE\);) Tj T*
+( 305:     glDrawArrays\(GL_TRIANGLES, 0, 6\);) Tj T*
+( 306:     glDepthMask\(GL_TRUE\);) Tj T*
+( 307:     glBindVertexArray\(0\);) Tj T*
+( 308:     glEnable\(GL_DEPTH_TEST\);) Tj T*
+( 309: }) Tj T*
+( 310: ) Tj T*
+( 311: int main\(\)) Tj T*
+( 312: {) Tj T*
+( 313:     try {  ) Tj T*
+( 314:         // glfw: initialize and configure) Tj T*
+( 315:         // ------------------------------) Tj T*
+( 316:         DeviceGL deviceGL;) Tj T*
+( 317: ) Tj T*
+( 318:         // glfw window creation) Tj T*
+( 319:         // --------------------) Tj T*
+( 320:         Window window\(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL"\);) Tj T*
+( 321:         if \(!window.IsValid\(\)\)) Tj T*
+( 322:         {) Tj T*
+( 323:             std::cout << "Failed to create GLFW window" << std::endl;) Tj T*
+( 324:             return -1;) Tj T*
+( 325:         }) Tj T*
+( 326: ) Tj T*
+( 327:         // glad: load all OpenGL function pointers) Tj T*
+( 328:         // ---------------------------------------) Tj T*
+( 329:         deviceGL.SetCurrentWindow\(window\);) Tj T*
+( 330:         if \(!deviceGL.IsReady\(\)\)) Tj T*
+( 331:         {) Tj T*
+ET
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 3 0 R >> >> /Contents 14 0 R >>
+endobj
+16 0 obj
+<< /Length 3515 >>
+stream
+BT /F1 7 Tf 30 560 Td 9 TL
+(Page 7 / 15) Tj T*
+T*
+( 332:             std::cout << "Failed to initialize GLAD" << std::endl;) Tj T*
+( 333:             return -1;) Tj T*
+( 334:         }) Tj T*
+( 335: ) Tj T*
+( 336:         // build and compile our shader program) Tj T*
+( 337:         // ------------------------------------) Tj T*
+( 338:         Shader shaderProgram\("default.vert", "default.frag"\);) Tj T*
+( 339:         Shader backgroundShader\("background.vert", "background.frag"\);) Tj T*
+( 340: ) Tj T*
+( 341:         BackgroundQuad background = createBackgroundQuad\(loadTexture\("iceCave.jpg"\)\);) Tj T*
+( 342: ) Tj T*
+( 343:         backgroundShader.Activate\(\);) Tj T*
+( 344:         glUniform1i\(glGetUniformLocation\(backgroundShader.ID, "backgroundTexture"\), 0\);) Tj T*
+( 345: ) Tj T*
+( 346:         // Vertex data for icicles and roof, generated once on the CPU.) Tj T*
+( 347:         MeshData sceneMesh;) Tj T*
+( 348:         IcicleSettings icicleSettings;) Tj T*
+( 349:         icicleSettings.allowOverlaps = OVERLAPS;) Tj T*
+( 350:         std::mt19937 rng\(123\);) Tj T*
+( 351: ) Tj T*
+( 352:         std::vector<glm::vec2> iciclePositions = generateIciclePositions\(icicleSettings, rng\);) Tj T*
+( 353:         for \(const glm::vec2& center : iciclePositions\)) Tj T*
+( 354:         {) Tj T*
+( 355:             appendIcicleMesh\(sceneMesh, center, icicleSettings, rng\);) Tj T*
+( 356:         }) Tj T*
+( 357: ) Tj T*
+( 358:         appendRoofMesh\(sceneMesh, icicleSettings\);) Tj T*
+( 359: ) Tj T*
+( 360:         // Vertex Array Object \(VAO\) - Part 2) Tj T*
+( 361:         // Stores pointers to VAOs and tells opengl where to find them) Tj T*
+( 362:         VertexArrayObject vao;) Tj T*
+( 363:         vao.Bind\(\);) Tj T*
+( 364: ) Tj T*
+( 365:         // Vertex buffer object \(VBO\) - Part 1 of graphics pipeline) Tj T*
+( 366:         // An array of references to the vertex data) Tj T*
+( 367:         VertexBufferObject vbo;) Tj T*
+( 368:         vbo.Bind\(\);) Tj T*
+( 369:         vbo.AllocateData<float>\(std::span\(sceneMesh.vertices\)\);) Tj T*
+( 370: ) Tj T*
+( 371:         // Element Buffer Object \(EBO\) - Part 3) Tj T*
+( 372:         // Stores indicies that describe which vertices to draw - Indexed drawing!) Tj T*
+( 373:         ElementBufferObject ebo;) Tj T*
+( 374:         ebo.Bind\(\);) Tj T*
+( 375:         ebo.AllocateData<unsigned int>\(std::span\(sceneMesh.indices\)\);) Tj T*
+( 376: ) Tj T*
+( 377:         // The position attribute is made of 3 floats: x, y, z) Tj T*
+( 378:         VertexAttribute position\(Data::Type::Float, 3\);) Tj T*
+( 379:         // Use shader location 0, read 3 floats \(x,y,z\) start at byte offset 0, jump one full vertex to get to the next position) Tj T*
+( 380:         vao.SetAttribute\(0, position, 0, FLOATS_PER_VERTEX * sizeof\(float\)\);) Tj T*
+( 381: ) Tj T*
+( 382:         // The normal attribute is made of 3 floats: nx, ny, nz) Tj T*
+( 383:         VertexAttribute normalV\(Data::Type::Float, 3\);) Tj T*
+( 384:         // Use shader location 1, read 3 floats after the position, jump one full vertex to get to the next normal) Tj T*
+( 385:         vao.SetAttribute\(1, normalV, 3 * sizeof\(float\), FLOATS_PER_VERTEX * sizeof\(float\)\);) Tj T*
+( 386: ) Tj T*
+( 387:         // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards ) Tj T*
+(      | we can safely unbind) Tj T*
+( 388:         VertexBufferObject::Unbind\(\);) Tj T*
+ET
+endstream
+endobj
+17 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 3 0 R >> >> /Contents 16 0 R >>
+endobj
+18 0 obj
+<< /Length 3303 >>
+stream
+BT /F1 7 Tf 30 560 Td 9 TL
+(Page 8 / 15) Tj T*
+T*
+( 389: ) Tj T*
+( 390:         // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other) Tj T*
+( 391:         // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs \(nor VBOs\) when it's not directly necessary.) Tj T*
+( 392:         VertexArrayObject::Unbind\(\);) Tj T*
+( 393: ) Tj T*
+( 394:         // Now we can unbind the EBO as well) Tj T*
+( 395:         ElementBufferObject::Unbind\(\);) Tj T*
+( 396: ) Tj T*
+( 397:         shaderProgram.Activate\(\);) Tj T*
+( 398: ) Tj T*
+( 399:         // Send light values to shaderProgram) Tj T*
+( 400:         glUniform3f\(glGetUniformLocation\(shaderProgram.ID, "lightPos"\), 0.0f, 2.0f, 10.0f\);) Tj T*
+( 401:         glUniform3f\(glGetUniformLocation\(shaderProgram.ID, "objectColor"\), 0.45f, 0.85f, 1.0f\);) Tj T*
+( 402:         glUniform3f\(glGetUniformLocation\(shaderProgram.ID, "lightColor"\), 1.0f, 1.0f, 1.0f\);) Tj T*
+( 403: ) Tj T*
+( 404:         glUniform1f\(glGetUniformLocation\(shaderProgram.ID, "ambientStrength"\), 0.18f\);) Tj T*
+( 405:         glUniform1f\(glGetUniformLocation\(shaderProgram.ID, "specularStrength"\), 0.9f\);) Tj T*
+( 406:         glUniform1f\(glGetUniformLocation\(shaderProgram.ID, "shininess"\), 64.0f\);) Tj T*
+( 407:         glUniform1f\(glGetUniformLocation\(shaderProgram.ID, "rimStrength"\), 0.45f\);) Tj T*
+( 408:         glUniform1f\(glGetUniformLocation\(shaderProgram.ID, "alpha"\), 0.96f\);) Tj T*
+( 409: ) Tj T*
+( 410:         // Depth Buffer) Tj T*
+( 411:         deviceGL.EnableFeature\(GL_DEPTH_TEST\);) Tj T*
+( 412: ) Tj T*
+( 413:         // If alpha is 0.45, icicle contributes 45% and the background contributes 55%) Tj T*
+( 414:         glEnable\(GL_BLEND\);) Tj T*
+( 415:         glBlendFunc\(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA\);) Tj T*
+( 416: ) Tj T*
+( 417:         float cameraZ = -6.0f;) Tj T*
+( 418:         float cameraX = 0.0f;) Tj T*
+( 419:         float cameraY = 0.35f;) Tj T*
+( 420:         float cameraVelocityZ = 0.0f;) Tj T*
+( 421: ) Tj T*
+( 422:         // Render loop) Tj T*
+( 423:         while \(!window.ShouldClose\(\)\)) Tj T*
+( 424:         {) Tj T*
+( 425: ) Tj T*
+( 426:             processInput\(window.GetInternalWindow\(\), cameraZ, cameraVelocityZ\);) Tj T*
+( 427: ) Tj T*
+( 428:             deviceGL.Clear\(true, Color\(0.2f, 0.3f, 0.3f, 1.0f\), true, 1.0f\);) Tj T*
+( 429: ) Tj T*
+( 430:             drawBackground\(background, backgroundShader\);) Tj T*
+( 431: ) Tj T*
+( 432:             shaderProgram.Activate\(\);) Tj T*
+( 433: ) Tj T*
+( 434:             glm::vec3 cameraWorldPos\(-cameraX, -cameraY, -cameraZ\);) Tj T*
+( 435:             glm::mat4 model = glm::mat4\(1.0f\);) Tj T*
+( 436:             glm::mat4 view = glm::mat4\(1.0f\);) Tj T*
+( 437:             glm::mat4 proj = glm::mat4\(1.0f\);) Tj T*
+( 438: ) Tj T*
+( 439:             model = glm::rotate\() Tj T*
+( 440:                 model,) Tj T*
+( 441:                 glm::radians\(\(float\)glfwGetTime\(\) * -1.0f\),) Tj T*
+( 442:                 glm::vec3\(0.0f, 1.0f, 0.0f\)) Tj T*
+( 443:             \);) Tj T*
+( 444: ) Tj T*
+( 445: ) Tj T*
+( 446:             view = glm::translate\(view, glm::vec3\(cameraX, cameraY, cameraZ\)\);) Tj T*
+ET
+endstream
+endobj
+19 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 3 0 R >> >> /Contents 18 0 R >>
+endobj
+20 0 obj
+<< /Length 2907 >>
+stream
+BT /F1 7 Tf 30 560 Td 9 TL
+(Page 9 / 15) Tj T*
+T*
+( 447: ) Tj T*
+( 448:             proj = glm::perspective\() Tj T*
+( 449:                 glm::radians\(45.0f\),) Tj T*
+( 450:                 \(float\)SCR_WIDTH / \(float\)SCR_HEIGHT,) Tj T*
+( 451:                 0.1f,) Tj T*
+( 452:                 100.0f) Tj T*
+( 453:             \);) Tj T*
+( 454: ) Tj T*
+( 455:             int modelLoc = glGetUniformLocation\(shaderProgram.ID, "model"\);) Tj T*
+( 456:             int viewLoc = glGetUniformLocation\(shaderProgram.ID, "view"\);) Tj T*
+( 457:             int projLoc = glGetUniformLocation\(shaderProgram.ID, "proj"\);) Tj T*
+( 458: ) Tj T*
+( 459:             glUniform3f\(glGetUniformLocation\(shaderProgram.ID, "viewPos"\), cameraWorldPos.x, cameraWorldPos.y, cameraWorldPos.z\);) Tj T*
+( 460:             glUniformMatrix4fv\(modelLoc, 1, GL_FALSE, glm::value_ptr\(model\)\);) Tj T*
+( 461:             glUniformMatrix4fv\(viewLoc, 1, GL_FALSE, glm::value_ptr\(view\)\);) Tj T*
+( 462:             glUniformMatrix4fv\(projLoc, 1, GL_FALSE, glm::value_ptr\(proj\)\);) Tj T*
+( 463: ) Tj T*
+( 464:             vao.Bind\(\);) Tj T*
+( 465: ) Tj T*
+( 466:             glDrawElements\() Tj T*
+( 467:                 GL_TRIANGLES,) Tj T*
+( 468:                 static_cast<GLsizei>\(sceneMesh.indices.size\(\)\),) Tj T*
+( 469:                 GL_UNSIGNED_INT,) Tj T*
+( 470:                 0) Tj T*
+( 471:             \);) Tj T*
+( 472: ) Tj T*
+( 473:             window.SwapBuffers\(\);) Tj T*
+( 474:             deviceGL.PollEvents\(\);) Tj T*
+( 475:         }) Tj T*
+( 476: ) Tj T*
+( 477:         // glfw: terminate, clearing all previously allocated GLFW resources.) Tj T*
+( 478:         // ------------------------------------------------------------------) Tj T*
+( 479:         // This is now done in the destructor of DeviceGL) Tj T*
+( 480:         return 0;) Tj T*
+( 481:     }) Tj T*
+( 482:     catch \(const std::exception& exception\)) Tj T*
+( 483:     {) Tj T*
+( 484:         std::cerr << exception.what\(\) << std::endl;) Tj T*
+( 485:         return -1;) Tj T*
+( 486:     }) Tj T*
+( 487: }) Tj T*
+( 488: ) Tj T*
+( 489: void processInput\(GLFWwindow* window, float& cameraZ ,float& cameraVelocityZ\)) Tj T*
+( 490: {) Tj T*
+( 491:     if \(glfwGetKey\(window, GLFW_KEY_ESCAPE\) == GLFW_PRESS\)) Tj T*
+( 492:         glfwSetWindowShouldClose\(window, true\);) Tj T*
+( 493: ) Tj T*
+( 494:     if \(glfwGetKey\(window, GLFW_KEY_Q\) == GLFW_PRESS\) {) Tj T*
+( 495:             glPolygonMode\(GL_FRONT_AND_BACK, GL_LINE\);) Tj T*
+( 496:     }) Tj T*
+( 497: ) Tj T*
+( 498:     if \(glfwGetKey\(window, GLFW_KEY_1\) == GLFW_PRESS\) {) Tj T*
+( 499:         glPolygonMode\(GL_FRONT_AND_BACK, GL_LINE\);) Tj T*
+( 500:     }) Tj T*
+( 501: ) Tj T*
+( 502:     if \(glfwGetKey\(window, GLFW_KEY_2\) == GLFW_PRESS\) {) Tj T*
+( 503:         glPolygonMode\(GL_FRONT_AND_BACK, GL_FILL\);) Tj T*
+( 504:     }) Tj T*
+ET
+endstream
+endobj
+21 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 3 0 R >> >> /Contents 20 0 R >>
+endobj
+22 0 obj
+<< /Length 2295 >>
+stream
+BT /F1 7 Tf 30 560 Td 9 TL
+(Page 10 / 15) Tj T*
+T*
+( 505: ) Tj T*
+( 506:     // Move) Tj T*
+( 507:     if \(glfwGetKey\(window, GLFW_KEY_W\) == GLFW_PRESS\) {) Tj T*
+( 508:         cameraVelocityZ += 0.0000001f;) Tj T*
+( 509:     }) Tj T*
+( 510: ) Tj T*
+( 511:     if \(glfwGetKey\(window, GLFW_KEY_S\) == GLFW_PRESS\) {) Tj T*
+( 512:         cameraVelocityZ -= 0.0000001f;) Tj T*
+( 513:     }) Tj T*
+( 514: ) Tj T*
+( 515:     if \(glfwGetKey\(window, GLFW_KEY_SPACE\) == GLFW_PRESS\) {) Tj T*
+( 516:         cameraVelocityZ = 0.0f;) Tj T*
+( 517:     }) Tj T*
+( 518: ) Tj T*
+( 519:     cameraZ += cameraVelocityZ;) Tj T*
+( 520: }) Tj T*
+() Tj T*
+(========================================================================================================================) Tj T*
+(playground/openGLPlayground/shaderClass.h) Tj T*
+(========================================================================================================================) Tj T*
+(   1: //) Tj T*
+(   2: // Created by ander on 4/10/2026.) Tj T*
+(   3: //) Tj T*
+(   4: ) Tj T*
+(   5: #ifndef ITU_GRAPHICS_PROGRAMMING_SHADERCLASS_H) Tj T*
+(   6: #define ITU_GRAPHICS_PROGRAMMING_SHADERCLASS_H) Tj T*
+(   7: ) Tj T*
+(   8: #endif //ITU_GRAPHICS_PROGRAMMING_SHADERCLASS_H) Tj T*
+(   9: ) Tj T*
+(  10: #ifndef SHADER_CLASS_H) Tj T*
+(  11: #define SHADER_CLASS_H) Tj T*
+(  12: ) Tj T*
+(  13: #include<glad/glad.h>) Tj T*
+(  14: #include<filesystem>) Tj T*
+(  15: #include<string>) Tj T*
+(  16: #include<fstream>) Tj T*
+(  17: #include<sstream>) Tj T*
+(  18: #include<iostream>) Tj T*
+(  19: #include<stdexcept>) Tj T*
+(  20: ) Tj T*
+(  21: // Function that reads the shader text files) Tj T*
+(  22: std::string get_file_contents\(const char* filename\);) Tj T*
+(  23: ) Tj T*
+(  24: class Shader) Tj T*
+(  25: {) Tj T*
+(  26:     public:) Tj T*
+(  27:         // refernce ID) Tj T*
+(  28:         GLuint ID;) Tj T*
+(  29:         // Constructor) Tj T*
+(  30:         Shader\(const char* vertexFile, const char* fragmentFile\);) Tj T*
+(  31: ) Tj T*
+(  32:         void Activate\(\);) Tj T*
+(  33:         void Deactivate\(\);) Tj T*
+(  34: };) Tj T*
+(  35: ) Tj T*
+(  36: #endif) Tj T*
+() Tj T*
+(========================================================================================================================) Tj T*
+ET
+endstream
+endobj
+23 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 3 0 R >> >> /Contents 22 0 R >>
+endobj
+24 0 obj
+<< /Length 2734 >>
+stream
+BT /F1 7 Tf 30 560 Td 9 TL
+(Page 11 / 15) Tj T*
+T*
+(playground/openGLPlayground/shaderClass.cpp) Tj T*
+(========================================================================================================================) Tj T*
+(   1: #include "shaderClass.h") Tj T*
+(   2: ) Tj T*
+(   3: namespace) Tj T*
+(   4: {) Tj T*
+(   5:     std::filesystem::path resolve_shader_path\(const char* filename\)) Tj T*
+(   6:     {) Tj T*
+(   7:         const std::filesystem::path shaderFile\(filename\);) Tj T*
+(   8:         std::filesystem::path current = std::filesystem::current_path\(\);) Tj T*
+(   9: ) Tj T*
+(  10:         for \(int i = 0; i < 6; ++i\)) Tj T*
+(  11:         {) Tj T*
+(  12:             const auto directPath = current / shaderFile;) Tj T*
+(  13:             if \(std::filesystem::exists\(directPath\)\)) Tj T*
+(  14:             {) Tj T*
+(  15:                 return directPath;) Tj T*
+(  16:             }) Tj T*
+(  17: ) Tj T*
+(  18:             const auto resourcePath = current / "playground" / "Resource Files" / "Shaders" / shaderFile;) Tj T*
+(  19:             if \(std::filesystem::exists\(resourcePath\)\)) Tj T*
+(  20:             {) Tj T*
+(  21:                 return resourcePath;) Tj T*
+(  22:             }) Tj T*
+(  23: ) Tj T*
+(  24:             const auto localResourcePath = current / "Resource Files" / "Shaders" / shaderFile;) Tj T*
+(  25:             if \(std::filesystem::exists\(localResourcePath\)\)) Tj T*
+(  26:             {) Tj T*
+(  27:                 return localResourcePath;) Tj T*
+(  28:             }) Tj T*
+(  29: ) Tj T*
+(  30:             if \(!current.has_parent_path\(\)\)) Tj T*
+(  31:             {) Tj T*
+(  32:                 break;) Tj T*
+(  33:             }) Tj T*
+(  34: ) Tj T*
+(  35:             current = current.parent_path\(\);) Tj T*
+(  36:         }) Tj T*
+(  37: ) Tj T*
+(  38:         throw std::runtime_error\(std::string\("Could not find shader file: "\) + filename\);) Tj T*
+(  39:     }) Tj T*
+(  40: }) Tj T*
+(  41: ) Tj T*
+(  42: std::string get_file_contents\(const char *filename\) {) Tj T*
+(  43:     const auto path = resolve_shader_path\(filename\);) Tj T*
+(  44:     std::ifstream in\(path, std::ios::binary\);) Tj T*
+(  45:     if \(in\) {) Tj T*
+(  46:         std::string contents;) Tj T*
+(  47:         in.seekg\(0, std::ios::end\);) Tj T*
+(  48:         contents.resize\(in.tellg\(\)\);) Tj T*
+(  49:         in.seekg\(0, std::ios::beg\);) Tj T*
+(  50:         in.read\(&contents[0], contents.size\(\)\);) Tj T*
+(  51:         in.close\(\);) Tj T*
+(  52:         return \(contents\);) Tj T*
+(  53:     }) Tj T*
+(  54:     throw std::runtime_error\("Failed to read shader file: " + path.string\(\)\);) Tj T*
+(  55: }) Tj T*
+(  56: ) Tj T*
+ET
+endstream
+endobj
+25 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 3 0 R >> >> /Contents 24 0 R >>
+endobj
+26 0 obj
+<< /Length 3372 >>
+stream
+BT /F1 7 Tf 30 560 Td 9 TL
+(Page 12 / 15) Tj T*
+T*
+(  57: Shader::Shader\(const char *vertexFile, const char *fragmentFile\) {) Tj T*
+(  58:     // Read files) Tj T*
+(  59:     std::string vertexCode = get_file_contents\(vertexFile\);) Tj T*
+(  60:     std::string fragmentCode = get_file_contents\(fragmentFile\);) Tj T*
+(  61: ) Tj T*
+(  62:     // Convert into character arrays) Tj T*
+(  63:     const char* vertexSource = vertexCode.c_str\(\);) Tj T*
+(  64:     const char* fragmentSource = fragmentCode.c_str\(\);) Tj T*
+(  65: ) Tj T*
+(  66:         // Create shader object) Tj T*
+(  67:     // GL_VERTEX_SHADER is passed as that is the type of shader we want to create) Tj T*
+(  68:     unsigned int vertexShader = glCreateShader\(GL_VERTEX_SHADER\);) Tj T*
+(  69:     // Attaching shader source code to the shader object and compiling the shader) Tj T*
+(  70:     glShaderSource\(vertexShader, 1, &vertexSource, NULL\);) Tj T*
+(  71:     glCompileShader\(vertexShader\);) Tj T*
+(  72:     // check for shader compile errors) Tj T*
+(  73:     int success;) Tj T*
+(  74:     char infoLog[512];) Tj T*
+(  75:     glGetShaderiv\(vertexShader, GL_COMPILE_STATUS, &success\);) Tj T*
+(  76:     if \(!success\)) Tj T*
+(  77:     {) Tj T*
+(  78:         glGetShaderInfoLog\(vertexShader, 512, NULL, infoLog\);) Tj T*
+(  79:         glDeleteShader\(vertexShader\);) Tj T*
+(  80:         throw std::runtime_error\(std::string\("ERROR::SHADER::VERTEX::COMPILATION_FAILED\\n"\) + infoLog\);) Tj T*
+(  81:     }) Tj T*
+(  82: ) Tj T*
+(  83:     // Shader 2: Fragment shader) Tj T*
+(  84:     // Calculates color output of our pixels) Tj T*
+(  85:     // For simplicity, now we just do one color, orange) Tj T*
+(  86: ) Tj T*
+(  87:     // Compiling fragment shader) Tj T*
+(  88:     unsigned int fragmentShader = glCreateShader\(GL_FRAGMENT_SHADER\);) Tj T*
+(  89:     glShaderSource\(fragmentShader, 1, &fragmentSource, NULL\);) Tj T*
+(  90:     glCompileShader\(fragmentShader\);) Tj T*
+(  91:     // check for shader compile errors) Tj T*
+(  92:     glGetShaderiv\(fragmentShader, GL_COMPILE_STATUS, &success\);) Tj T*
+(  93:     if \(!success\)) Tj T*
+(  94:     {) Tj T*
+(  95:         glGetShaderInfoLog\(fragmentShader, 512, NULL, infoLog\);) Tj T*
+(  96:         glDeleteShader\(vertexShader\);) Tj T*
+(  97:         glDeleteShader\(fragmentShader\);) Tj T*
+(  98:         throw std::runtime_error\(std::string\("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\\n"\) + infoLog\);) Tj T*
+(  99:     }) Tj T*
+( 100: ) Tj T*
+( 101:     // Linking our 2 shaders to a shader program) Tj T*
+( 102:     /* Shader program:) Tj T*
+( 103:      * - Final linked version of multiple shaders combined) Tj T*
+( 104:      * - After linking shaders to the shader program, we activate the shader program when rendering objects) Tj T*
+( 105:      * - Activated shader program's shaders are used during render calls) Tj T*
+( 106:     */) Tj T*
+( 107:     ID = glCreateProgram\(\);) Tj T*
+( 108:     glAttachShader\(ID, vertexShader\);) Tj T*
+( 109:     glAttachShader\(ID, fragmentShader\);) Tj T*
+( 110:     glLinkProgram\(ID\);) Tj T*
+( 111:     // Every shader and rendering call after glUseProgram will now use this program object) Tj T*
+( 112:     // check for linking errors) Tj T*
+( 113:     glGetProgramiv\(ID, GL_LINK_STATUS, &success\);) Tj T*
+( 114:     if \(!success\) {) Tj T*
+ET
+endstream
+endobj
+27 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 3 0 R >> >> /Contents 26 0 R >>
+endobj
+28 0 obj
+<< /Length 2660 >>
+stream
+BT /F1 7 Tf 30 560 Td 9 TL
+(Page 13 / 15) Tj T*
+T*
+( 115:         glGetProgramInfoLog\(ID, 512, NULL, infoLog\);) Tj T*
+( 116:         glDeleteShader\(vertexShader\);) Tj T*
+( 117:         glDeleteShader\(fragmentShader\);) Tj T*
+( 118:         glDeleteProgram\(ID\);) Tj T*
+( 119:         throw std::runtime_error\(std::string\("ERROR::SHADER::PROGRAM::LINKING_FAILED\\n"\) + infoLog\);) Tj T*
+( 120:     }) Tj T*
+( 121:     // Deleting the shader objects after linking to the program object since we dont need them anymore) Tj T*
+( 122:     glDeleteShader\(vertexShader\);) Tj T*
+( 123:     glDeleteShader\(fragmentShader\);) Tj T*
+( 124: }) Tj T*
+( 125: ) Tj T*
+( 126: void Shader::Activate\(\) {) Tj T*
+( 127:     glUseProgram\(ID\);) Tj T*
+( 128: }) Tj T*
+( 129: ) Tj T*
+( 130: void Shader::Deactivate\(\) {) Tj T*
+( 131:     glDeleteProgram\(ID\);) Tj T*
+( 132: }) Tj T*
+() Tj T*
+(========================================================================================================================) Tj T*
+(playground/Resource Files/Shaders/default.vert) Tj T*
+(========================================================================================================================) Tj T*
+(   1: #version 330 core) Tj T*
+(   2: ) Tj T*
+(   3: layout \(location = 0\) in vec3 aPos;) Tj T*
+(   4: layout \(location = 1\) in vec3 aNormal;) Tj T*
+(   5: ) Tj T*
+(   6: out vec3 FragPos;) Tj T*
+(   7: out vec3 Normal;) Tj T*
+(   8: ) Tj T*
+(   9: uniform mat4 model;) Tj T*
+(  10: uniform mat4 view;) Tj T*
+(  11: uniform mat4 proj;) Tj T*
+(  12: ) Tj T*
+(  13: void main\(\)) Tj T*
+(  14: {) Tj T*
+(  15:    // Convert vertex position from local object space to world space) Tj T*
+(  16:    FragPos = vec3\(model * vec4\(aPos, 1.0\)\);) Tj T*
+(  17: ) Tj T*
+(  18:    // Convert normal direction from local object space to world space) Tj T*
+(  19:    Normal = mat3\(transpose\(inverse\(model\)\)\) * aNormal;) Tj T*
+(  20: ) Tj T*
+(  21:    // Convert world-space position to clip space) Tj T*
+(  22:    gl_Position = proj * view * vec4\(FragPos, 1.0\);) Tj T*
+(  23: }) Tj T*
+() Tj T*
+(========================================================================================================================) Tj T*
+(playground/Resource Files/Shaders/default.frag) Tj T*
+(========================================================================================================================) Tj T*
+(   1: #version 330 core) Tj T*
+(   2: ) Tj T*
+(   3: in vec3 FragPos;) Tj T*
+(   4: in vec3 Normal;) Tj T*
+(   5: ) Tj T*
+(   6: uniform vec3 lightPos;) Tj T*
+(   7: uniform vec3 viewPos;) Tj T*
+(   8: ) Tj T*
+(   9: uniform vec3 objectColor;) Tj T*
+ET
+endstream
+endobj
+29 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 3 0 R >> >> /Contents 28 0 R >>
+endobj
+30 0 obj
+<< /Length 2490 >>
+stream
+BT /F1 7 Tf 30 560 Td 9 TL
+(Page 14 / 15) Tj T*
+T*
+(  10: uniform vec3 lightColor;) Tj T*
+(  11: ) Tj T*
+(  12: uniform float ambientStrength;) Tj T*
+(  13: uniform float specularStrength;) Tj T*
+(  14: uniform float shininess = 64.0f;) Tj T*
+(  15: uniform float rimStrength;) Tj T*
+(  16: uniform float alpha;) Tj T*
+(  17: ) Tj T*
+(  18: out vec4 FragColor;) Tj T*
+(  19: ) Tj T*
+(  20: void main\(\)) Tj T*
+(  21: {) Tj T*
+(  22:    vec3 norm = normalize\(Normal\);) Tj T*
+(  23: ) Tj T*
+(  24:    // Direction from fragment to light) Tj T*
+(  25:    vec3 lightDir = normalize\(lightPos - FragPos\);) Tj T*
+(  26: ) Tj T*
+(  27:    // Direction from fragment to camera) Tj T*
+(  28:    vec3 viewDir = normalize\(viewPos - FragPos\);) Tj T*
+(  29: ) Tj T*
+(  30:    // AMBIENT) Tj T*
+(  31:    vec3 ambient = ambientStrength * lightColor;) Tj T*
+(  32: ) Tj T*
+(  33:    // DIFFUSE) Tj T*
+(  34:    float diffuseAmount = max\(dot\(norm, lightDir\), 0.0\);) Tj T*
+(  35:    vec3 diffuse = diffuseAmount * lightColor;) Tj T*
+(  36: ) Tj T*
+(  37:    // SPECULAR - Blinn-Phong) Tj T*
+(  38:    vec3 halfwayDir = normalize\(lightDir + viewDir\);) Tj T*
+(  39:    float specularAmount = pow\(max\(dot\(norm, halfwayDir\), 0.0\), shininess\);) Tj T*
+(  40:    vec3 specular = specularStrength * specularAmount * lightColor;) Tj T*
+(  41: ) Tj T*
+(  42:    // RIM / FRESNEL-ISH EDGE GLOW) Tj T*
+(  43:    float rimAmount = 1.0 - max\(dot\(norm, viewDir\), 0.0\);) Tj T*
+(  44:    rimAmount = pow\(rimAmount, 2.0\);) Tj T*
+(  45:    vec3 rim = rimAmount * rimStrength * vec3\(0.5, 0.85, 1.0\);) Tj T*
+(  46: ) Tj T*
+(  47:    vec3 result = \(ambient + diffuse\) * objectColor + specular + rim;) Tj T*
+(  48: ) Tj T*
+(  49:    FragColor = vec4\(result, alpha\);) Tj T*
+(  50: }) Tj T*
+() Tj T*
+(========================================================================================================================) Tj T*
+(playground/Resource Files/Shaders/background.vert) Tj T*
+(========================================================================================================================) Tj T*
+(   1: #version 330 core) Tj T*
+(   2: ) Tj T*
+(   3: layout \(location = 0\) in vec2 aPos;) Tj T*
+(   4: layout \(location = 1\) in vec2 aTexCoord;) Tj T*
+(   5: ) Tj T*
+(   6: out vec2 TexCoord;) Tj T*
+(   7: ) Tj T*
+(   8: void main\(\)) Tj T*
+(   9: {) Tj T*
+(  10:     TexCoord = aTexCoord;) Tj T*
+(  11:     gl_Position = vec4\(aPos, 0.0, 1.0\);) Tj T*
+(  12: }) Tj T*
+() Tj T*
+ET
+endstream
+endobj
+31 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 3 0 R >> >> /Contents 30 0 R >>
+endobj
+32 0 obj
+<< /Length 717 >>
+stream
+BT /F1 7 Tf 30 560 Td 9 TL
+(Page 15 / 15) Tj T*
+T*
+(========================================================================================================================) Tj T*
+(playground/Resource Files/Shaders/background.frag) Tj T*
+(========================================================================================================================) Tj T*
+(   1: #version 330 core) Tj T*
+(   2: ) Tj T*
+(   3: in vec2 TexCoord;) Tj T*
+(   4: ) Tj T*
+(   5: uniform sampler2D backgroundTexture;) Tj T*
+(   6: ) Tj T*
+(   7: out vec4 FragColor;) Tj T*
+(   8: ) Tj T*
+(   9: void main\(\)) Tj T*
+(  10: {) Tj T*
+(  11:     FragColor = texture\(backgroundTexture, TexCoord\);) Tj T*
+(  12: }) Tj T*
+() Tj T*
+ET
+endstream
+endobj
+33 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 3 0 R >> >> /Contents 32 0 R >>
+endobj
+xref
+0 34
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000218 00000 n 
+0000000313 00000 n 
+0000003007 00000 n 
+0000003133 00000 n 
+0000005481 00000 n 
+0000005607 00000 n 
+0000008296 00000 n 
+0000008422 00000 n 
+0000011330 00000 n 
+0000011458 00000 n 
+0000014283 00000 n 
+0000014411 00000 n 
+0000017098 00000 n 
+0000017226 00000 n 
+0000020794 00000 n 
+0000020922 00000 n 
+0000024278 00000 n 
+0000024406 00000 n 
+0000027366 00000 n 
+0000027494 00000 n 
+0000029842 00000 n 
+0000029970 00000 n 
+0000032757 00000 n 
+0000032885 00000 n 
+0000036310 00000 n 
+0000036438 00000 n 
+0000039151 00000 n 
+0000039279 00000 n 
+0000041822 00000 n 
+0000041950 00000 n 
+0000042719 00000 n 
+trailer
+<< /Size 34 /Root 1 0 R >>
+startxref
+42847
+%%EOF

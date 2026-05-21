@@ -1,0 +1,222 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R] /Count 3 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Length 2092 >>
+stream
+BT /F1 10 Tf 45 790 Td 13 TL
+(Procedural Icicle Project - Report Structure) Tj T*
+(============================================) Tj T*
+() Tj T*
+(1. Title / Project Overview) Tj T*
+(===========================) Tj T*
+(Title suggestion:) Tj T*
+(Procedural Icicle Scene in OpenGL) Tj T*
+() Tj T*
+(Shortly explain:) Tj T*
+(- You built a procedural icy ceiling scene.) Tj T*
+(- Icicles are generated in code, not modeled manually.) Tj T*
+(- The scene uses OpenGL, shaders, procedural mesh generation, normals, lighting, alpha blending,) Tj T*
+(  and a textured background.) Tj T*
+() Tj T*
+(2. Motivation) Tj T*
+(=============) Tj T*
+(Explain why you chose this project:) Tj T*
+() Tj T*
+(I chose procedural icicle generation because it combines mesh generation, randomness, lighting,) Tj T*
+(normals, and scene composition. The goal was to create a visually recognizable ice cave scene) Tj T*
+(while learning low-level OpenGL concepts.) Tj T*
+() Tj T*
+(3. Problem Statement) Tj T*
+(====================) Tj T*
+(Example:) Tj T*
+() Tj T*
+(The goal of the project was to generate many icicles procedurally within the dimensions of a) Tj T*
+(roof plane, render them with lighting, and compose them with a background image to create an ice) Tj T*
+(cave scene.) Tj T*
+() Tj T*
+(Mention what you wanted to achieve visually:) Tj T*
+(- Icicles attached to a roof) Tj T*
+(- Random variation in height, radius, shape, and lean) Tj T*
+(- Non-overlapping placement) Tj T*
+(- Lighting that makes the geometry readable) Tj T*
+() Tj T*
+(4. Implementation Details) Tj T*
+(=========================) Tj T*
+(This should be the largest section.) Tj T*
+() Tj T*
+(Suggested subsections:) Tj T*
+() Tj T*
+(OpenGL Setup) Tj T*
+(Explain:) Tj T*
+(- window/context using ituGL) Tj T*
+(- VAO, VBO, EBO) Tj T*
+(- indexed drawing) Tj T*
+(- depth testing) Tj T*
+(- blending) Tj T*
+() Tj T*
+(Procedural Geometry) Tj T*
+(Explain your vertex format:) Tj T*
+(Each vertex stores position and normal:) Tj T*
+(x, y, z, nx, ny, nz) Tj T*
+() Tj T*
+(Explain how one icicle is generated:) Tj T*
+(- one tip vertex) Tj T*
+T*
+(Page 1 / 3) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 1939 >>
+stream
+BT /F1 10 Tf 45 790 Td 13 TL
+(- ring of vertices at roof height) Tj T*
+(- triangle fan from tip to ring) Tj T*
+(- indices connect the mesh) Tj T*
+() Tj T*
+(Mention your parameters:) Tj T*
+(- segment count) Tj T*
+(- min/max radius) Tj T*
+(- min/max tip height) Tj T*
+(- roof width/depth) Tj T*
+() Tj T*
+(Random Placement) Tj T*
+(Explain:) Tj T*
+(- random \(x, z\) positions are sampled inside the roof dimensions) Tj T*
+(- positions are rejected if too close to existing icicles) Tj T*
+(- this prevents heavy overlap) Tj T*
+() Tj T*
+(Normals and Lighting) Tj T*
+(Explain:) Tj T*
+(- normals are needed for lighting) Tj T*
+(- diffuse lighting uses dot product between normal and light direction) Tj T*
+(- specular/rim/alpha if currently in your shader) Tj T*
+() Tj T*
+(Example phrasing:) Tj T*
+(The fragment shader uses the interpolated normal to calculate how much each surface faces the) Tj T*
+(light. This makes the icicles appear three-dimensional instead of flat.) Tj T*
+() Tj T*
+(Background Texture) Tj T*
+(Explain:) Tj T*
+(- iceCave.jpg is rendered as a fullscreen quad) Tj T*
+(- it uses a separate shader) Tj T*
+(- depth testing is disabled while drawing the background) Tj T*
+(- depth testing is enabled again before drawing icicles) Tj T*
+() Tj T*
+(5. Settings) Tj T*
+(===========) Tj T*
+(List important constants:) Tj T*
+() Tj T*
+(Icicle count: 6000) Tj T*
+(Segments per icicle: 24) Tj T*
+(Radius range: 0.05 to 0.20) Tj T*
+(Tip height range: -0.8 to -0.1) Tj T*
+(Roof size: 7 x 7) Tj T*
+() Tj T*
+(Also mention controls:) Tj T*
+() Tj T*
+(W/S: camera movement) Tj T*
+(1/2: wireframe/fill mode) Tj T*
+(ESC: close window) Tj T*
+() Tj T*
+(6. Results) Tj T*
+(==========) Tj T*
+(Add 1-3 screenshots in the report, and also put screenshots in a separate folder as required.) Tj T*
+() Tj T*
+(Describe what works:) Tj T*
+(- many procedural icicles) Tj T*
+(- varying shapes) Tj T*
+(- lighting visible on surfaces) Tj T*
+T*
+(Page 2 / 3) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 1488 >>
+stream
+BT /F1 10 Tf 45 790 Td 13 TL
+(- background creates scene context) Tj T*
+() Tj T*
+(7. Limitations / Future Improvements) Tj T*
+(====================================) Tj T*
+(Good things to mention:) Tj T*
+(- no hardware instancing yet) Tj T*
+(- all icicle geometry is generated on CPU) Tj T*
+(- normals are approximate) Tj T*
+(- background is a flat image, not a 3D environment) Tj T*
+() Tj T*
+(Possible future improvements:) Tj T*
+(- OpenGL instancing) Tj T*
+(- better normal calculation) Tj T*
+(- child icicles on segments) Tj T*
+(- post-processing blur) Tj T*
+(- cubemap or skybox) Tj T*
+(- performance profiling) Tj T*
+() Tj T*
+(Be honest. That is better than overselling.) Tj T*
+() Tj T*
+(8. External Resources) Tj T*
+(=====================) Tj T*
+(List anything you used:) Tj T*
+(- ituGL exercise framework) Tj T*
+(- GLM) Tj T*
+(- stb_image) Tj T*
+(- OpenGL documentation / LearnOpenGL if used) Tj T*
+(- StackOverflow snippet if still relevant) Tj T*
+(- source of iceCave.jpg) Tj T*
+(- any AI assistance if your course expects disclosure) Tj T*
+() Tj T*
+(Final Checklist) Tj T*
+(===============) Tj T*
+(Before hand-in, make sure you include:) Tj T*
+(- Source code) Tj T*
+(- Shader files) Tj T*
+(- Texture files) Tj T*
+(- Report, 4-8 pages) Tj T*
+(- Screenshot folder) Tj T*
+(- Build/run instructions if needed) Tj T*
+(- External resource list) Tj T*
+() Tj T*
+(The official deadline in the formal requirements PDF is Friday, May 22, 2026 at 14:00.) Tj T*
+() Tj T*
+T*
+(Page 3 / 3) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 8 0 R >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000133 00000 n 
+0000000230 00000 n 
+0000002374 00000 n 
+0000002500 00000 n 
+0000004491 00000 n 
+0000004617 00000 n 
+0000006157 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+6283
+%%EOF
