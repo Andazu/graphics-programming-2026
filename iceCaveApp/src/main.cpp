@@ -73,7 +73,7 @@ std::filesystem::path resolveTexturePath(const char* filename)
 
     for (int i = 0; i < 6; ++i)
     {
-        const auto resourcePath = current / "playground" / "Resource Files" / "Textures" / textureFile;
+        const auto resourcePath = current / "iceCaveApp" / "Resource Files" / "Textures" / textureFile;
         if (std::filesystem::exists(resourcePath))
         {
             return resourcePath;

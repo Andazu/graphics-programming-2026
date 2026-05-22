@@ -15,7 +15,7 @@ namespace
                 return directPath;
             }
 
-            const auto resourcePath = current / "playground" / "Resource Files" / "Shaders" / shaderFile;
+            const auto resourcePath = current / "iceCaveApp" / "Resource Files" / "Shaders" / shaderFile;
             if (std::filesystem::exists(resourcePath))
             {
                 return resourcePath;

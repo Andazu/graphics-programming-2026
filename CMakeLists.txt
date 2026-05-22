@@ -55,4 +55,4 @@ include_directories(
 )
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/libraries)
-add_subdirectory(${CMAKE_SOURCE_DIR}/playground)
+add_subdirectory(${CMAKE_SOURCE_DIR}/iceCaveApp)
